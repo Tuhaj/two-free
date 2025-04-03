@@ -3,11 +3,12 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const energyDisplay = document.getElementById('energyDisplay');
 const levelDisplay = document.getElementById('levelDisplay');
-const scoreDisplay = document.getElementById('scoreDisplay');
+const diamondDisplay = document.getElementById('diamondDisplay');
 const levelCompleteDiv = document.getElementById('level-complete');
 const levelBonusSpan = document.getElementById('levelBonus');
-const totalScoreSpan = document.getElementById('totalScore');
+const totalDiamondsSpan = document.getElementById('totalDiamonds');
 const countdownSpan = document.getElementById('countdown');
+const achievementsDiv = document.getElementById('achievements');
 
 // Touch control elements
 const leftBtn = document.getElementById('leftBtn');
@@ -24,9 +25,22 @@ const TILE_SIZE = 32;
 
 // Game state
 let currentLevel = 1;
-let totalScore = 0;
+let totalDiamonds = 0;
 let levelComplete = false;
 let levelTransitionTimer = 0;
+
+// Achievements system
+const achievements = [
+    {id: 'first_treasure', title: 'First Treasure', description: 'Find your first treasure', icon: '💎', reached: false, threshold: 1},
+    {id: 'treasure_hunter', title: 'Treasure Hunter', description: 'Collect 10 diamonds', icon: '🏆', reached: false, threshold: 10},
+    {id: 'master_digger', title: 'Master Digger', description: 'Collect 25 diamonds', icon: '⛏️', reached: false, threshold: 25},
+    {id: 'diamond_expert', title: 'Diamond Expert', description: 'Collect 50 diamonds', icon: '👑', reached: false, threshold: 50},
+    {id: 'millionaire', title: 'Millionaire', description: 'Collect 100 diamonds', icon: '💰', reached: false, threshold: 100},
+    {id: 'level_5', title: 'Deep Explorer', description: 'Reach level 5', icon: '🔍', reached: false, threshold: 5, isLevel: true},
+    {id: 'level_10', title: 'Core Dweller', description: 'Reach level 10', icon: '🔥', reached: false, threshold: 10, isLevel: true},
+    {id: 'energy_max', title: 'Power Up', description: 'Reach 50 energy', icon: '⚡', reached: false, threshold: 50, isEnergy: true},
+    {id: 'energy_super', title: 'Super Charged', description: 'Reach 100 energy', icon: '⚡⚡', reached: false, threshold: 100, isEnergy: true}
+];
 
 // Player
 let player = {
@@ -70,11 +84,16 @@ let digEffect = null;
 function init() {
     // Reset game state
     currentLevel = 1;
-    totalScore = 0;
+    totalDiamonds = 0;
+    
+    // Reset achievements
+    achievements.forEach(achievement => {
+        achievement.reached = false;
+    });
     
     // Update displays
     updateLevelDisplay();
-    scoreDisplay.textContent = "0";
+    updateDiamondDisplay();
     
     // Generate world terrain
     generateWorld();
@@ -433,109 +452,6 @@ function handleVerticalCollisions() {
     }
 }
 
-// Dig through terrain
-function dig() {
-    if (player.isDigging && player.energy > 0) {
-        // Calculate dig position based on player facing direction
-        const digX = Math.floor((player.x + (player.facingRight ? player.width : 0)) / TILE_SIZE);
-        const digY = Math.floor((player.y + player.height) / TILE_SIZE);
-        
-        // First check if there's a treasure at dig location
-        let treasureFound = false;
-        let treasureValue = 0;
-        
-        for (let i = 0; i < treasures.length; i++) {
-            const treasure = treasures[i];
-            if (!treasure.collected) {
-                const treasureTileX = Math.floor(treasure.x / TILE_SIZE);
-                const treasureTileY = Math.floor(treasure.y / TILE_SIZE);
-                
-                if (treasureTileX === digX && treasureTileY === digY) {
-                    // Collect treasure through digging
-                    treasure.collected = true;
-                    treasureFound = true;
-                    treasureValue = treasure.value;
-                    
-                    // Increase energy
-                    player.energy += treasureValue;
-                    updateEnergyDisplay();
-                    
-                    // Create special treasure collection effect
-                    createCollectEffect(treasure.x + TILE_SIZE/2, treasure.y + TILE_SIZE/2, treasureValue);
-                    
-                    break;
-                }
-            }
-        }
-        
-        // Check if valid dig location
-        if (
-            digX >= 0 && digX < worldWidth &&
-            digY >= 0 && digY < worldHeight &&
-            world[digY][digX] === 1 // Only dig through dirt
-        ) {
-            // Remove the block
-            world[digY][digX] = 0;
-            
-            // Create digging effect at the center of the tile
-            createDigEffect(digX * TILE_SIZE + TILE_SIZE/2, digY * TILE_SIZE + TILE_SIZE/2);
-            
-            // Decrease energy only if no treasure was found
-            if (!treasureFound) {
-                player.energy -= 0.1;
-                updateEnergyDisplay();
-            }
-        }
-        
-        // Check if all treasures have been collected
-        let allCollected = true;
-        for (let i = 0; i < treasures.length; i++) {
-            if (!treasures[i].collected) {
-                allCollected = false;
-                break;
-            }
-        }
-        
-        if (allCollected && treasures.length > 0 && !levelComplete) {
-            completeLevelWithSuccess();
-        }
-    }
-}
-
-// Create treasure collection effect
-function createCollectEffect(x, y, value) {
-    // Create a text effect showing value
-    const text = `+${value}`;
-    
-    // Create floating text effect
-    const textEffect = {
-        x: x,
-        y: y,
-        text: text,
-        life: 40,
-        vy: -1.5
-    };
-    
-    // Add the text effect to particles array for easy management
-    particles.push(textEffect);
-    
-    // Create sparkles
-    for (let i = 0; i < 12; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 0.5 + Math.random() * 2;
-        
-        particles.push({
-            x: x,
-            y: y,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed - 1, // Slight upward bias
-            size: 2 + Math.random() * 2,
-            color: `hsl(${30 + Math.random() * 30}, 100%, 50%)`, // Gold-like colors
-            life: 20 + Math.random() * 20
-        });
-    }
-}
-
 // Collect treasures
 function collectTreasures() {
     let allCollected = true;
@@ -555,9 +471,16 @@ function collectTreasures() {
                 // Collect treasure
                 treasure.collected = true;
                 
-                // Increase energy
+                // Increase energy and diamonds
                 player.energy += treasure.value;
+                totalDiamonds += treasure.value;
+                
+                // Update displays
                 updateEnergyDisplay();
+                updateDiamondDisplay();
+                
+                // Create collection effect
+                createCollectEffect(treasure.x + TILE_SIZE/2, treasure.y + TILE_SIZE/2, treasure.value);
             }
         }
     }
@@ -578,12 +501,15 @@ function completeLevelWithSuccess() {
     
     // Calculate bonus based on energy and level
     const levelBonus = Math.floor(player.energy * currentLevel);
-    totalScore += levelBonus;
+    totalDiamonds += levelBonus;
     
     // Update UI
     levelBonusSpan.textContent = levelBonus;
-    totalScoreSpan.textContent = totalScore;
-    scoreDisplay.textContent = totalScore;
+    totalDiamondsSpan.textContent = totalDiamonds;
+    updateDiamondDisplay();
+    
+    // Check for level-related achievements
+    checkAchievements();
     
     // Start countdown to next level
     levelTransitionTimer = 3;
@@ -609,6 +535,9 @@ function updateCountdown() {
 function startNextLevel() {
     currentLevel++;
     updateLevelDisplay();
+    
+    // Check for level-based achievements
+    checkAchievements();
     
     // Reset player position but keep energy and score
     player.x = canvas.width / 2;
@@ -1162,4 +1091,207 @@ function gameLoop(timestamp) {
 }
 
 // Start the game
-init(); 
+init();
+
+// Update diamond display with visual diamonds
+function updateDiamondDisplay() {
+    // Generate diamond icons based on count
+    let diamondHTML = '';
+    const displayDiamonds = Math.min(totalDiamonds, 50); // Cap visual display at 50 diamonds
+    
+    // Show diamond icons for small numbers
+    if (displayDiamonds <= 10) {
+        for (let i = 0; i < displayDiamonds; i++) {
+            diamondHTML += '💎';
+        }
+    } else {
+        // For larger numbers, show some diamonds and the number
+        diamondHTML = '💎'.repeat(5) + ' x' + totalDiamonds;
+    }
+    
+    // Update the display
+    diamondDisplay.innerHTML = diamondHTML;
+    
+    // Check achievements
+    checkAchievements();
+}
+
+// Check if any achievements have been reached
+function checkAchievements() {
+    let newAchievements = false;
+    
+    achievements.forEach(achievement => {
+        if (!achievement.reached) {
+            if (
+                (achievement.isLevel && currentLevel >= achievement.threshold) || 
+                (achievement.isEnergy && player.energy >= achievement.threshold) ||
+                (!achievement.isLevel && !achievement.isEnergy && totalDiamonds >= achievement.threshold)
+            ) {
+                achievement.reached = true;
+                showAchievementNotification(achievement);
+                newAchievements = true;
+            }
+        }
+    });
+    
+    return newAchievements;
+}
+
+// Show achievement notification
+function showAchievementNotification(achievement) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'achievement-notification';
+    notification.style.backgroundColor = 'rgba(0, 20, 40, 0.9)';
+    notification.style.color = '#fff';
+    notification.style.padding = '15px';
+    notification.style.borderRadius = '10px';
+    notification.style.marginBottom = '10px';
+    notification.style.boxShadow = '0 0 20px rgba(102, 204, 255, 0.7)';
+    notification.style.border = '2px solid #66CCFF';
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateX(100px)';
+    notification.style.transition = 'all 0.5s ease';
+    
+    // Add content
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center;">
+            <div style="font-size: 32px; margin-right: 10px;">${achievement.icon}</div>
+            <div>
+                <div style="font-weight: bold; color: gold;">${achievement.title}</div>
+                <div style="font-size: 0.8em;">${achievement.description}</div>
+            </div>
+        </div>
+    `;
+    
+    // Add to achievements div
+    achievementsDiv.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+    }, 50);
+    
+    // Remove after delay
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100px)';
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 500);
+    }, 5000);
+    
+    // Play achievement sound (could be implemented later)
+}
+
+// Dig through terrain
+function dig() {
+    if (player.isDigging && player.energy > 0) {
+        // Calculate dig position based on player facing direction
+        const digX = Math.floor((player.x + (player.facingRight ? player.width : 0)) / TILE_SIZE);
+        const digY = Math.floor((player.y + player.height) / TILE_SIZE);
+        
+        // First check if there's a treasure at dig location
+        let treasureFound = false;
+        let treasureValue = 0;
+        
+        for (let i = 0; i < treasures.length; i++) {
+            const treasure = treasures[i];
+            if (!treasure.collected) {
+                const treasureTileX = Math.floor(treasure.x / TILE_SIZE);
+                const treasureTileY = Math.floor(treasure.y / TILE_SIZE);
+                
+                if (treasureTileX === digX && treasureTileY === digY) {
+                    // Collect treasure through digging
+                    treasure.collected = true;
+                    treasureFound = true;
+                    treasureValue = treasure.value;
+                    
+                    // Increase energy and diamonds
+                    player.energy += treasureValue;
+                    totalDiamonds += treasureValue;
+                    
+                    // Update displays
+                    updateEnergyDisplay();
+                    updateDiamondDisplay();
+                    
+                    // Create special treasure collection effect
+                    createCollectEffect(treasure.x + TILE_SIZE/2, treasure.y + TILE_SIZE/2, treasureValue);
+                    
+                    break;
+                }
+            }
+        }
+        
+        // Check if valid dig location
+        if (
+            digX >= 0 && digX < worldWidth &&
+            digY >= 0 && digY < worldHeight &&
+            world[digY][digX] === 1 // Only dig through dirt
+        ) {
+            // Remove the block
+            world[digY][digX] = 0;
+            
+            // Create digging effect at the center of the tile
+            createDigEffect(digX * TILE_SIZE + TILE_SIZE/2, digY * TILE_SIZE + TILE_SIZE/2);
+            
+            // Decrease energy only if no treasure was found
+            if (!treasureFound) {
+                player.energy -= 0.1;
+                updateEnergyDisplay();
+                
+                // Check energy achievements
+                checkAchievements();
+            }
+        }
+        
+        // Check if all treasures have been collected
+        let allCollected = true;
+        for (let i = 0; i < treasures.length; i++) {
+            if (!treasures[i].collected) {
+                allCollected = false;
+                break;
+            }
+        }
+        
+        if (allCollected && treasures.length > 0 && !levelComplete) {
+            completeLevelWithSuccess();
+        }
+    }
+}
+
+// Create treasure collection effect
+function createCollectEffect(x, y, value) {
+    // Create a text effect showing value
+    const text = `+${value} 💎`;
+    
+    // Create floating text effect
+    const textEffect = {
+        x: x,
+        y: y,
+        text: text,
+        life: 40,
+        vy: -1.5
+    };
+    
+    // Add the text effect to particles array for easy management
+    particles.push(textEffect);
+    
+    // Create sparkles
+    for (let i = 0; i < 12; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.5 + Math.random() * 2;
+        
+        particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 1, // Slight upward bias
+            size: 2 + Math.random() * 2,
+            color: `hsl(${200 + Math.random() * 40}, 100%, 50%)`, // Blue diamond-like colors
+            life: 20 + Math.random() * 20
+        });
+    }
+} 

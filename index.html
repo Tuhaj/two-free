@@ -250,7 +250,7 @@
                 </div>
                 <div class="stat-item">
                     <div class="stat-icon">💎</div>
-                    <div>Score: <span id="scoreDisplay">0</span></div>
+                    <div>Diamonds: <span id="diamondDisplay"></span></div>
                 </div>
             </div>
             
@@ -258,9 +258,12 @@
                 <h2>Level Complete!</h2>
                 <p>You collected all treasures!</p>
                 <p>Level bonus: <span id="levelBonus" class="highlight">0</span></p>
-                <p>Total score: <span id="totalScore" class="highlight">0</span></p>
+                <p>Total diamonds: <span id="totalDiamonds" class="highlight">0</span></p>
                 <p>Next level starting in <span id="countdown" class="highlight">3</span>...</p>
             </div>
+            
+            <!-- Achievement notification area -->
+            <div id="achievements" style="position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; z-index: 1000;"></div>
             
             <div id="touch-controls">
                 <div class="control-row">
