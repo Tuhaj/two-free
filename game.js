@@ -23,6 +23,24 @@ const MOVEMENT_SPEED = 5;
 const DIG_SPEED = 3;
 const TILE_SIZE = 32;
 
+// War background elements
+let warBackgroundElements = {
+    explosions: [],
+    missiles: [],
+    smokeClouds: []
+};
+
+// Missile attack system
+const MISSILE_ATTACK_INTERVAL_MIN = 8000; // 8 seconds minimum between attacks
+const MISSILE_ATTACK_INTERVAL_MAX = 12000; // 12 seconds maximum between attacks
+const WARNING_DURATION = 3000; // 3 seconds of warning before missile hits
+let nextMissileAttack = Date.now() + getRandomInterval();
+let missileWarning = false;
+let missileWarningStarted = 0;
+let incomingMissile = null;
+let playerHit = false;
+let hitTime = 0;
+
 // Game state
 let currentLevel = 1;
 let totalDiamonds = 0;
@@ -97,6 +115,9 @@ function init() {
     
     // Generate world terrain
     generateWorld();
+    
+    // Create initial background war elements
+    createInitialWarBackground();
     
     // Add event listeners for keyboard controls
     window.addEventListener('keydown', e => keys[e.key] = true);
@@ -566,13 +587,16 @@ function updateEnergyDisplay() {
 function draw() {
     // Draw background with gradient sky
     const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    skyGradient.addColorStop(0, '#1e90ff'); // Dodger blue at top
-    skyGradient.addColorStop(1, '#87CEEB'); // Sky blue at bottom
+    skyGradient.addColorStop(0, '#1e3a5a'); // Darker blue for war sky
+    skyGradient.addColorStop(1, '#576b84'); // Grayish blue at bottom
     ctx.fillStyle = skyGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // Draw distant mountains
     drawMountains();
+    
+    // Draw war background elements (explosions, missiles, smoke)
+    drawWarBackground();
     
     // Draw world
     for (let y = 0; y < worldHeight; y++) {
@@ -636,8 +660,31 @@ function draw() {
     // Draw particles
     updateAndDrawParticles();
     
+    // Draw missile warning or incoming missile
+    drawMissileWarning();
+    
     // Draw player as Wall-E inspired robot
     drawRobot(player.x, player.y, player.width, player.height, player.facingRight);
+    
+    // Draw "hidden" indicator if player is hidden underground
+    if (isPlayerHidden()) {
+        // Show a shield or safety indicator above the player
+        ctx.font = 'bold 12px Arial';
+        ctx.fillStyle = 'rgba(0, 255, 100, 0.8)';
+        ctx.textAlign = 'center';
+        ctx.fillText('⛨ HIDDEN', player.x + player.width / 2, player.y - 10);
+        
+        // Add a subtle shield effect around player
+        ctx.strokeStyle = 'rgba(0, 255, 100, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(player.x + player.width / 2, player.y + player.height / 2, 
+                player.width * 0.8, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    
+    // Draw player hit effect (red overlay, screen shake)
+    drawPlayerHitEffect();
     
     // Draw overlay when level is complete
     if (levelComplete) {
@@ -649,36 +696,120 @@ function draw() {
 
 // Draw mountains in the background
 function drawMountains() {
-    // Set mountain properties
-    ctx.fillStyle = '#4a6d8c'; // Bluish gray mountains
-    
     // First mountain range (far)
+    ctx.fillStyle = '#2d3b4a'; // Dark blue-gray mountains
     ctx.beginPath();
     ctx.moveTo(0, canvas.height * 0.5);
     
-    // Create jagged mountain peaks
-    for (let x = 0; x < canvas.width; x += 80) {
-        const height = canvas.height * 0.2 + Math.sin(x / 50) * canvas.height * 0.1;
-        ctx.lineTo(x, canvas.height * 0.5 - height);
+    // Create jagged mountain peaks with some ruined/destroyed areas
+    for (let x = 0; x < canvas.width; x += 60) {
+        const height = canvas.height * 0.15 + Math.sin(x / 50) * canvas.height * 0.1;
+        
+        // Add some destroyed peaks (gaps) to represent war damage
+        if (Math.random() < 0.2) {
+            // Lower height for destroyed areas
+            ctx.lineTo(x, canvas.height * 0.5 - height * 0.6);
+        } else {
+            ctx.lineTo(x, canvas.height * 0.5 - height);
+        }
     }
     
     ctx.lineTo(canvas.width, canvas.height * 0.5);
     ctx.closePath();
     ctx.fill();
     
+    // Draw some smoke/fires on the distant mountains
+    for (let i = 0; i < 5; i++) {
+        const x = Math.random() * canvas.width;
+        const y = canvas.height * 0.4;
+        
+        // Draw glow for distant fires
+        const fireGlow = ctx.createRadialGradient(x, y, 0, x, y, 15);
+        fireGlow.addColorStop(0, 'rgba(255, 200, 50, 0.3)');
+        fireGlow.addColorStop(1, 'rgba(255, 50, 0, 0)');
+        
+        ctx.fillStyle = fireGlow;
+        ctx.beginPath();
+        ctx.arc(x, y, 15, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
     // Second mountain range (closer, darker)
-    ctx.fillStyle = '#3a5d7c'; 
+    ctx.fillStyle = '#1a2530'; 
     ctx.beginPath();
     ctx.moveTo(0, canvas.height * 0.55);
     
-    for (let x = 0; x < canvas.width; x += 60) {
-        const height = canvas.height * 0.15 + Math.cos(x / 40) * canvas.height * 0.08;
-        ctx.lineTo(x, canvas.height * 0.55 - height);
+    // Create more detailed mountains with damaged appearance
+    for (let x = 0; x < canvas.width; x += 40) {
+        const height = canvas.height * 0.12 + Math.cos(x / 40) * canvas.height * 0.08;
+        
+        // Add jagged war-torn look
+        if (Math.random() < 0.3) {
+            // Create crater or gap
+            ctx.lineTo(x, canvas.height * 0.55 - height * 0.7);
+            ctx.lineTo(x + 10, canvas.height * 0.55 - height * 0.5);
+        } else {
+            ctx.lineTo(x, canvas.height * 0.55 - height);
+        }
     }
     
     ctx.lineTo(canvas.width, canvas.height * 0.55);
     ctx.closePath();
     ctx.fill();
+    
+    // Draw ruined buildings/structures in silhouette
+    drawRuinedStructures();
+}
+
+// Draw ruined buildings and structures in silhouette
+function drawRuinedStructures() {
+    ctx.fillStyle = '#0a1520'; // Almost black silhouettes
+    
+    // Draw a few destroyed buildings/structures
+    for (let i = 0; i < 4; i++) {
+        const x = i * (canvas.width / 4) + Math.random() * 50;
+        const baseY = canvas.height * 0.55;
+        const baseWidth = 30 + Math.random() * 50;
+        const maxHeight = 60 + Math.random() * 40;
+        
+        // Draw building base
+        ctx.beginPath();
+        ctx.rect(x, baseY - maxHeight * 0.6, baseWidth, maxHeight * 0.6);
+        ctx.fill();
+        
+        // Draw a damaged/jagged top
+        ctx.beginPath();
+        ctx.moveTo(x, baseY - maxHeight * 0.6);
+        
+        // Create a jagged, war-damaged roofline
+        let currentX = x;
+        while (currentX < x + baseWidth) {
+            const segmentWidth = 5 + Math.random() * 10;
+            const height = maxHeight * (0.6 + Math.random() * 0.4);
+            ctx.lineTo(currentX, baseY - height);
+            currentX += segmentWidth;
+        }
+        
+        ctx.lineTo(x + baseWidth, baseY - maxHeight * 0.6);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Sometimes add a destroyed tower or chimney
+        if (Math.random() < 0.5) {
+            const towerX = x + Math.random() * baseWidth;
+            const towerWidth = 5 + Math.random() * 10;
+            const towerHeight = maxHeight * (0.8 + Math.random() * 0.2);
+            
+            ctx.beginPath();
+            ctx.moveTo(towerX, baseY - maxHeight * 0.6);
+            ctx.lineTo(towerX, baseY - towerHeight);
+            ctx.lineTo(towerX + towerWidth / 2, baseY - towerHeight * 0.9);
+            ctx.lineTo(towerX + towerWidth, baseY - towerHeight);
+            ctx.lineTo(towerX + towerWidth, baseY - maxHeight * 0.6);
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
 }
 
 // Draw dirt tile with texture
@@ -1054,8 +1185,11 @@ function gameLoop(timestamp) {
     
     // Only update at our target frame rate
     if (elapsed > frameTime) {
-        // Only update player if level is not complete
-        if (!levelComplete) {
+        // Update missiles and war background elements
+        updateMissiles();
+        
+        // Only update player if level is not complete and not hit by missile
+        if (!levelComplete && !(playerHit && Date.now() - hitTime < 500)) {
             // Update game state
             updatePlayer();
             
@@ -1293,5 +1427,459 @@ function createCollectEffect(x, y, value) {
             color: `hsl(${200 + Math.random() * 40}, 100%, 50%)`, // Blue diamond-like colors
             life: 20 + Math.random() * 20
         });
+    }
+}
+
+// Get random interval for missile attacks
+function getRandomInterval() {
+    return MISSILE_ATTACK_INTERVAL_MIN + Math.random() * (MISSILE_ATTACK_INTERVAL_MAX - MISSILE_ATTACK_INTERVAL_MIN);
+}
+
+// Check if player is hidden (safe from missile)
+function isPlayerHidden() {
+    // Player is considered hidden if there's dirt above them
+    const playerTileX = Math.floor(player.x / TILE_SIZE);
+    const playerTileY = Math.floor(player.y / TILE_SIZE);
+    
+    // Check if there's dirt above the player
+    for (let y = 0; y < playerTileY; y++) {
+        if (
+            world[y] && 
+            world[y][playerTileX] === 1 && 
+            world[y][playerTileX + 1] === 1
+        ) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+// Create a background explosion
+function createBackgroundExplosion(x, y, size) {
+    warBackgroundElements.explosions.push({
+        x: x,
+        y: y,
+        size: size,
+        frame: 0,
+        maxFrames: 20,
+        color: `hsl(${30 + Math.random() * 20}, 100%, ${50 + Math.random() * 50}%)`
+    });
+    
+    // Create smoke clouds from explosion
+    for (let i = 0; i < 3; i++) {
+        createSmokeCloud(
+            x + (Math.random() - 0.5) * size * 2,
+            y + (Math.random() - 0.5) * size,
+            size * 0.7 + Math.random() * size * 0.5
+        );
+    }
+}
+
+// Create a smoke cloud
+function createSmokeCloud(x, y, size) {
+    warBackgroundElements.smokeClouds.push({
+        x: x,
+        y: y,
+        size: size,
+        vx: (Math.random() - 0.5) * 0.5, // Slight horizontal drift
+        life: 100 + Math.random() * 200,
+        maxLife: 100 + Math.random() * 200,
+        color: `rgba(${100 + Math.random() * 50}, ${100 + Math.random() * 50}, ${100 + Math.random() * 50}, 0.7)`
+    });
+}
+
+// Create a distant missile for background effect
+function createDistantMissile() {
+    const missile = {
+        x: Math.random() * canvas.width,
+        y: -20,
+        targetX: Math.random() * canvas.width,
+        targetY: canvas.height * 0.4 + Math.random() * canvas.height * 0.1,
+        speed: 3 + Math.random() * 2,
+        size: 2 + Math.random() * 3,
+        trail: [],
+        isBackground: true,
+        exploded: false
+    };
+    
+    // Calculate the angle
+    const dx = missile.targetX - missile.x;
+    const dy = missile.targetY - missile.y;
+    missile.angle = Math.atan2(dy, dx);
+    
+    warBackgroundElements.missiles.push(missile);
+}
+
+// Create an incoming missile attack targeted at player
+function createIncomingMissile() {
+    // Only create if there isn't already an incoming missile
+    if (!incomingMissile) {
+        // Target a bit ahead of player's position
+        const playerDirection = player.velocityX > 0 ? 1 : (player.velocityX < 0 ? -1 : 0);
+        const targetX = player.x + player.width / 2 + (playerDirection * player.width * 2);
+        
+        incomingMissile = {
+            x: targetX + (Math.random() - 0.5) * 300, // Start a bit randomly to sides
+            y: -50,
+            targetX: targetX,
+            targetY: 0, // Will be set to ground level at impact point
+            speed: 5,
+            size: 6,
+            trail: [],
+            isBackground: false,
+            exploded: false,
+            warningFrame: 0
+        };
+        
+        // Find the ground level at the target X position
+        for (let y = 0; y < worldHeight; y++) {
+            const tileX = Math.floor(incomingMissile.targetX / TILE_SIZE);
+            if (
+                tileX >= 0 && 
+                tileX < worldWidth && 
+                world[y] && 
+                world[y][tileX] && 
+                world[y][tileX] !== 0
+            ) {
+                incomingMissile.targetY = y * TILE_SIZE;
+                break;
+            }
+        }
+        
+        // Calculate the angle
+        const dx = incomingMissile.targetX - incomingMissile.x;
+        const dy = incomingMissile.targetY - incomingMissile.y;
+        incomingMissile.angle = Math.atan2(dy, dx);
+        
+        // Start the warning
+        missileWarning = true;
+        missileWarningStarted = Date.now();
+    }
+}
+
+// Update missile positions
+function updateMissiles() {
+    const currentTime = Date.now();
+    
+    // Create random background missiles
+    if (Math.random() < 0.01 && warBackgroundElements.missiles.length < 5) {
+        createDistantMissile();
+    }
+    
+    // Check if it's time for a missile attack
+    if (currentTime >= nextMissileAttack && !levelComplete && !missileWarning && !incomingMissile) {
+        createIncomingMissile();
+    }
+    
+    // Update background missiles
+    warBackgroundElements.missiles = warBackgroundElements.missiles.filter(missile => {
+        if (missile.exploded) return false;
+        
+        // Move missile
+        const vx = Math.cos(missile.angle) * missile.speed;
+        const vy = Math.sin(missile.angle) * missile.speed;
+        missile.x += vx;
+        missile.y += vy;
+        
+        // Add to trail
+        missile.trail.push({x: missile.x, y: missile.y, age: 0});
+        
+        // Check if missile has reached its target
+        const dx = missile.targetX - missile.x;
+        const dy = missile.targetY - missile.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // If target reached, explode
+        if (distance < 5) {
+            missile.exploded = true;
+            
+            // If it's a background missile, just make a small explosion
+            if (missile.isBackground) {
+                createBackgroundExplosion(missile.targetX, missile.targetY, 30 + Math.random() * 20);
+            }
+            return false;
+        }
+        
+        // Remove if offscreen
+        if (missile.x < -50 || missile.x > canvas.width + 50 || missile.y > canvas.height + 50) {
+            return false;
+        }
+        
+        return true;
+    });
+    
+    // Update incoming missile
+    if (incomingMissile) {
+        // If warning phase is complete, move the missile
+        if (currentTime - missileWarningStarted >= WARNING_DURATION) {
+            missileWarning = false;
+            
+            // Move missile
+            const vx = Math.cos(incomingMissile.angle) * incomingMissile.speed;
+            const vy = Math.sin(incomingMissile.angle) * incomingMissile.speed;
+            incomingMissile.x += vx;
+            incomingMissile.y += vy;
+            
+            // Add to trail
+            incomingMissile.trail.push({x: incomingMissile.x, y: incomingMissile.y, age: 0});
+            
+            // Check if missile has reached its target
+            const dx = incomingMissile.targetX - incomingMissile.x;
+            const dy = incomingMissile.targetY - incomingMissile.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // If target reached, explode
+            if (distance < 5) {
+                createMissileImpact(incomingMissile.targetX, incomingMissile.targetY);
+                incomingMissile = null;
+                nextMissileAttack = currentTime + getRandomInterval();
+            }
+        }
+    }
+    
+    // Update missile trails
+    for (let missile of warBackgroundElements.missiles.concat(incomingMissile ? [incomingMissile] : [])) {
+        if (missile) {
+            missile.trail = missile.trail.filter(point => {
+                point.age++;
+                return point.age < 20; // Trail length
+            });
+        }
+    }
+    
+    // Update background explosions
+    warBackgroundElements.explosions = warBackgroundElements.explosions.filter(explosion => {
+        explosion.frame++;
+        return explosion.frame < explosion.maxFrames;
+    });
+    
+    // Update smoke clouds
+    warBackgroundElements.smokeClouds = warBackgroundElements.smokeClouds.filter(cloud => {
+        cloud.x += cloud.vx;
+        cloud.life--;
+        return cloud.life > 0;
+    });
+}
+
+// Create a missile impact - destroys terrain and possibly damages player
+function createMissileImpact(x, y) {
+    // Create a large explosion
+    createBackgroundExplosion(x, y, 80);
+    
+    // Destroy terrain in a radius around the impact
+    const impactRadius = 3; // In tiles
+    const centerTileX = Math.floor(x / TILE_SIZE);
+    const centerTileY = Math.floor(y / TILE_SIZE);
+    
+    for (let ty = Math.max(0, centerTileY - impactRadius); ty <= Math.min(worldHeight - 1, centerTileY + impactRadius); ty++) {
+        for (let tx = Math.max(0, centerTileX - impactRadius); tx <= Math.min(worldWidth - 1, centerTileX + impactRadius); tx++) {
+            // Calculate distance from center
+            const distance = Math.sqrt(Math.pow(tx - centerTileX, 2) + Math.pow(ty - centerTileY, 2));
+            
+            // Remove blocks within the radius
+            if (distance <= impactRadius && world[ty][tx] === 1) {
+                // Sometimes leave blocks at the edge for a more natural look
+                if (distance > impactRadius - 0.5 && Math.random() < 0.3) {
+                    continue;
+                }
+                
+                world[ty][tx] = 0;
+                
+                // Create debris particles
+                for (let i = 0; i < 3; i++) {
+                    particles.push({
+                        x: tx * TILE_SIZE + TILE_SIZE / 2,
+                        y: ty * TILE_SIZE + TILE_SIZE / 2,
+                        vx: (Math.random() - 0.5) * 8,
+                        vy: (Math.random() - 0.5) * 8 - 2,
+                        size: 2 + Math.random() * 4,
+                        color: '#8B4513',
+                        life: 30 + Math.random() * 30
+                    });
+                }
+            }
+        }
+    }
+    
+    // Check if player is hit
+    const playerCenterX = player.x + player.width / 2;
+    const playerCenterY = player.y + player.height / 2;
+    const dx = playerCenterX - x;
+    const dy = playerCenterY - y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // If player is near the impact and not hidden
+    if (distance < impactRadius * TILE_SIZE && !isPlayerHidden()) {
+        // Player is hit!
+        playerHit = true;
+        hitTime = Date.now();
+        
+        // Reduce energy
+        player.energy = Math.max(0, player.energy - 25);
+        updateEnergyDisplay();
+        
+        // Apply knockback
+        const knockbackDirection = dx < 0 ? -1 : 1;
+        player.velocityX = knockbackDirection * 15;
+        player.velocityY = -10;
+    }
+}
+
+// Draw the war background elements
+function drawWarBackground() {
+    // Draw background explosions
+    for (let explosion of warBackgroundElements.explosions) {
+        const radius = explosion.size * (1 - explosion.frame / explosion.maxFrames);
+        const alpha = 1 - explosion.frame / explosion.maxFrames;
+        
+        // Draw explosion glow
+        const gradient = ctx.createRadialGradient(
+            explosion.x, explosion.y, 0,
+            explosion.x, explosion.y, radius
+        );
+        gradient.addColorStop(0, `rgba(255, 255, 200, ${alpha})`);
+        gradient.addColorStop(0.5, `${explosion.color.replace(')', `, ${alpha * 0.7})`).replace('hsl', 'hsla')}`);
+        gradient.addColorStop(1, `rgba(100, 50, 0, 0)`);
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(explosion.x, explosion.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    // Draw smoke clouds
+    for (let cloud of warBackgroundElements.smokeClouds) {
+        const alpha = (cloud.life / cloud.maxLife) * 0.7;
+        ctx.fillStyle = cloud.color.replace(')', `, ${alpha})`).replace('rgba', 'rgba');
+        ctx.beginPath();
+        ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    // Draw background missiles and trails
+    for (let missile of warBackgroundElements.missiles) {
+        // Draw trail
+        for (let i = 0; i < missile.trail.length; i++) {
+            const point = missile.trail[i];
+            const alpha = 1 - point.age / 20;
+            ctx.fillStyle = `rgba(255, 100, 50, ${alpha * 0.5})`;
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, missile.size / 2 * (1 - point.age / 20), 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Draw missile
+        ctx.fillStyle = '#FF3300';
+        ctx.beginPath();
+        ctx.arc(missile.x, missile.y, missile.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// Draw the warning indicator and incoming missile
+function drawMissileWarning() {
+    if (missileWarning && incomingMissile) {
+        // Flash warning indicator
+        incomingMissile.warningFrame++;
+        const warningOpacity = (incomingMissile.warningFrame % 20 < 10) ? 1 : 0.3;
+        
+        // Calculate warning position - where the missile will hit
+        const x = incomingMissile.targetX;
+        const y = incomingMissile.targetY;
+        
+        // Draw warning circle
+        ctx.strokeStyle = `rgba(255, 0, 0, ${warningOpacity})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(x, y, 40, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Draw crosshairs
+        ctx.beginPath();
+        ctx.moveTo(x - 50, y);
+        ctx.lineTo(x + 50, y);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(x, y - 50);
+        ctx.lineTo(x, y + 50);
+        ctx.stroke();
+        
+        // Draw warning text
+        ctx.font = 'bold 20px Arial';
+        ctx.fillStyle = `rgba(255, 0, 0, ${warningOpacity})`;
+        ctx.textAlign = 'center';
+        ctx.fillText('⚠️ INCOMING!', x, y - 60);
+    }
+    
+    // Draw incoming missile
+    if (incomingMissile && !missileWarning) {
+        // Draw trail
+        for (let i = 0; i < incomingMissile.trail.length; i++) {
+            const point = incomingMissile.trail[i];
+            const alpha = 1 - point.age / 20;
+            ctx.fillStyle = `rgba(255, 0, 0, ${alpha * 0.7})`;
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, incomingMissile.size / 2 * (1 - point.age / 20), 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Draw missile
+        ctx.fillStyle = '#FF0000';
+        ctx.beginPath();
+        ctx.arc(incomingMissile.x, incomingMissile.y, incomingMissile.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// Draw the player hit effect
+function drawPlayerHitEffect() {
+    if (playerHit) {
+        const elapsedTime = Date.now() - hitTime;
+        if (elapsedTime < 2000) {
+            // Shake the canvas
+            const shakeAmount = Math.max(0, 10 - elapsedTime / 200);
+            ctx.save();
+            ctx.translate(
+                (Math.random() - 0.5) * shakeAmount, 
+                (Math.random() - 0.5) * shakeAmount
+            );
+            
+            // Red overlay
+            const alpha = Math.max(0, 0.7 - elapsedTime / 2000);
+            ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.restore();
+        } else {
+            playerHit = false;
+        }
+    }
+}
+
+// Create initial background war elements
+function createInitialWarBackground() {
+    // Create some initial explosions
+    for (let i = 0; i < 5; i++) {
+        createBackgroundExplosion(
+            Math.random() * canvas.width,
+            Math.random() * canvas.height * 0.4,
+            30 + Math.random() * 20
+        );
+    }
+    
+    // Create initial smoke clouds
+    for (let i = 0; i < 10; i++) {
+        createSmokeCloud(
+            Math.random() * canvas.width,
+            Math.random() * canvas.height * 0.3,
+            20 + Math.random() * 30
+        );
+    }
+    
+    // Create initial missiles
+    for (let i = 0; i < 3; i++) {
+        createDistantMissile();
     }
 } 
