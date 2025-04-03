@@ -912,105 +912,209 @@ function updateAndDrawParticles() {
 
 // Draw a Wall-E inspired robot
 function drawRobot(x, y, width, height, facingRight) {
+    // Add digging animation
+    const diggingOffset = player.isDigging ? Math.sin(Date.now() / 100) * 2 : 0;
+    
     // Main body (slightly compressed cube)
     ctx.fillStyle = '#E8A30C'; // Wall-E yellow
-    ctx.fillRect(x + width * 0.1, y + height * 0.2, width * 0.8, height * 0.6);
+    ctx.fillRect(x + width * 0.1, y + height * 0.2 + diggingOffset, width * 0.8, height * 0.6);
     
     // Treads/wheels
     ctx.fillStyle = '#333333';
-    ctx.fillRect(x, y + height * 0.8, width, height * 0.2);
+    ctx.fillRect(x, y + height * 0.8 + diggingOffset, width, height * 0.2);
     
     // Tread details
     ctx.fillStyle = '#555555';
     for (let i = 0; i < 4; i++) {
-        ctx.fillRect(x + width * 0.2 * i, y + height * 0.82, width * 0.15, height * 0.16);
+        ctx.fillRect(x + width * 0.2 * i, y + height * 0.82 + diggingOffset, width * 0.15, height * 0.16);
     }
     
     // Head
     ctx.fillStyle = '#E8A30C';
-    ctx.fillRect(x + width * 0.15, y, width * 0.7, height * 0.25);
+    ctx.fillRect(x + width * 0.15, y + diggingOffset/2, width * 0.7, height * 0.25);
     
     // Eyes (binoculars style)
     ctx.fillStyle = '#333';
     if (facingRight) {
         // Right-facing eyes
-        ctx.fillRect(x + width * 0.6, y + height * 0.05, width * 0.25, height * 0.15);
+        ctx.fillRect(x + width * 0.6, y + height * 0.05 + diggingOffset/2, width * 0.25, height * 0.15);
         
-        // Eye details
-        ctx.fillStyle = '#66CCFF'; // Blue eyes
-        ctx.fillRect(x + width * 0.65, y + height * 0.07, width * 0.15, height * 0.1);
+        // Eye details - orange when digging, blue normally
+        ctx.fillStyle = player.isDigging ? '#FF9900' : '#66CCFF';
+        ctx.fillRect(x + width * 0.65, y + height * 0.07 + diggingOffset/2, width * 0.15, height * 0.1);
         
-        // Eyebrow
+        // Eyebrow - angled down when digging
         ctx.fillStyle = '#333';
-        ctx.fillRect(x + width * 0.6, y - height * 0.02, width * 0.25, height * 0.04);
+        ctx.save();
+        if (player.isDigging) {
+            ctx.translate(x + width * 0.72, y - height * 0.02 + diggingOffset/2);
+            ctx.rotate(Math.PI / 30); // Slight angle for effort
+            ctx.fillRect(-width * 0.12, 0, width * 0.25, height * 0.04);
+        } else {
+            ctx.fillRect(x + width * 0.6, y - height * 0.02, width * 0.25, height * 0.04);
+        }
+        ctx.restore();
         
-        // Arm (digging tool)
+        // Arm (digging tool) - animated when digging
         ctx.fillStyle = '#E8A30C';
-        ctx.fillRect(x + width * 0.8, y + height * 0.3, width * 0.3, height * 0.15);
-        
-        // Digging claw
-        ctx.fillStyle = '#555';
-        ctx.beginPath();
-        ctx.moveTo(x + width * 1.1, y + height * 0.3);
-        ctx.lineTo(x + width * 1.2, y + height * 0.25);
-        ctx.lineTo(x + width * 1.2, y + height * 0.5);
-        ctx.lineTo(x + width * 1.1, y + height * 0.45);
-        ctx.closePath();
-        ctx.fill();
+        if (player.isDigging) {
+            // Animated digging motion
+            const digAngle = Math.sin(Date.now() / 150) * 15;
+            ctx.save();
+            ctx.translate(x + width * 0.95, y + height * 0.38);
+            ctx.rotate(digAngle * Math.PI / 180);
+            ctx.fillRect(0, -height * 0.07, width * 0.3, height * 0.15);
+            
+            // Digging claw
+            ctx.fillStyle = '#555';
+            ctx.beginPath();
+            ctx.moveTo(width * 0.3, -height * 0.05);
+            ctx.lineTo(width * 0.4, -height * 0.1);
+            ctx.lineTo(width * 0.45, height * 0.1);
+            ctx.lineTo(width * 0.3, height * 0.08);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+            
+            // Add digging particles
+            if (Math.random() < 0.3) {
+                particles.push({
+                    x: x + width * 1.3 + Math.random() * 10,
+                    y: y + height * 0.4 + Math.random() * 10,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: -Math.random() * 3,
+                    size: 2 + Math.random() * 3,
+                    color: '#8B4513',
+                    life: 10 + Math.random() * 20
+                });
+            }
+        } else {
+            ctx.fillRect(x + width * 0.8, y + height * 0.3, width * 0.3, height * 0.15);
+            
+            // Digging claw
+            ctx.fillStyle = '#555';
+            ctx.beginPath();
+            ctx.moveTo(x + width * 1.1, y + height * 0.3);
+            ctx.lineTo(x + width * 1.2, y + height * 0.25);
+            ctx.lineTo(x + width * 1.2, y + height * 0.5);
+            ctx.lineTo(x + width * 1.1, y + height * 0.45);
+            ctx.closePath();
+            ctx.fill();
+        }
     } else {
         // Left-facing eyes
-        ctx.fillRect(x + width * 0.15, y + height * 0.05, width * 0.25, height * 0.15);
+        ctx.fillRect(x + width * 0.15, y + height * 0.05 + diggingOffset/2, width * 0.25, height * 0.15);
         
-        // Eye details
-        ctx.fillStyle = '#66CCFF'; // Blue eyes
-        ctx.fillRect(x + width * 0.2, y + height * 0.07, width * 0.15, height * 0.1);
+        // Eye details - orange when digging, blue normally
+        ctx.fillStyle = player.isDigging ? '#FF9900' : '#66CCFF';
+        ctx.fillRect(x + width * 0.2, y + height * 0.07 + diggingOffset/2, width * 0.15, height * 0.1);
         
-        // Eyebrow
+        // Eyebrow - angled down when digging
         ctx.fillStyle = '#333';
-        ctx.fillRect(x + width * 0.15, y - height * 0.02, width * 0.25, height * 0.04);
+        ctx.save();
+        if (player.isDigging) {
+            ctx.translate(x + width * 0.28, y - height * 0.02 + diggingOffset/2);
+            ctx.rotate(-Math.PI / 30); // Slight angle for effort
+            ctx.fillRect(-width * 0.12, 0, width * 0.25, height * 0.04);
+        } else {
+            ctx.fillRect(x + width * 0.15, y - height * 0.02, width * 0.25, height * 0.04);
+        }
+        ctx.restore();
         
-        // Arm (digging tool)
+        // Arm (digging tool) - animated when digging
         ctx.fillStyle = '#E8A30C';
-        ctx.fillRect(x - width * 0.3, y + height * 0.3, width * 0.3, height * 0.15);
-        
-        // Digging claw
-        ctx.fillStyle = '#555';
-        ctx.beginPath();
-        ctx.moveTo(x - width * 0.3, y + height * 0.3);
-        ctx.lineTo(x - width * 0.4, y + height * 0.25);
-        ctx.lineTo(x - width * 0.4, y + height * 0.5);
-        ctx.lineTo(x - width * 0.3, y + height * 0.45);
-        ctx.closePath();
-        ctx.fill();
+        if (player.isDigging) {
+            // Animated digging motion
+            const digAngle = Math.sin(Date.now() / 150) * 15;
+            ctx.save();
+            ctx.translate(x + width * 0.05, y + height * 0.38);
+            ctx.rotate(-digAngle * Math.PI / 180);
+            ctx.fillRect(-width * 0.3, -height * 0.07, width * 0.3, height * 0.15);
+            
+            // Digging claw
+            ctx.fillStyle = '#555';
+            ctx.beginPath();
+            ctx.moveTo(-width * 0.3, -height * 0.05);
+            ctx.lineTo(-width * 0.4, -height * 0.1);
+            ctx.lineTo(-width * 0.45, height * 0.1);
+            ctx.lineTo(-width * 0.3, height * 0.08);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+            
+            // Add digging particles
+            if (Math.random() < 0.3) {
+                particles.push({
+                    x: x - width * 0.5 - Math.random() * 10,
+                    y: y + height * 0.4 + Math.random() * 10,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: -Math.random() * 3,
+                    size: 2 + Math.random() * 3,
+                    color: '#8B4513',
+                    life: 10 + Math.random() * 20
+                });
+            }
+        } else {
+            ctx.fillRect(x - width * 0.3, y + height * 0.3, width * 0.3, height * 0.15);
+            
+            // Digging claw
+            ctx.fillStyle = '#555';
+            ctx.beginPath();
+            ctx.moveTo(x - width * 0.3, y + height * 0.3);
+            ctx.lineTo(x - width * 0.4, y + height * 0.25);
+            ctx.lineTo(x - width * 0.4, y + height * 0.5);
+            ctx.lineTo(x - width * 0.3, y + height * 0.45);
+            ctx.closePath();
+            ctx.fill();
+        }
     }
     
     // Solar panel back
     ctx.fillStyle = '#444';
-    ctx.fillRect(x + width * 0.2, y + height * 0.1, width * 0.6, height * 0.1);
+    ctx.fillRect(x + width * 0.2, y + height * 0.1 + diggingOffset/2, width * 0.6, height * 0.1);
     
     // Details on body (controls/buttons)
     ctx.fillStyle = '#444';
-    ctx.fillRect(x + width * 0.3, y + height * 0.4, width * 0.4, height * 0.1);
+    ctx.fillRect(x + width * 0.3, y + height * 0.4 + diggingOffset, width * 0.4, height * 0.1);
     
-    // Small lights
-    ctx.fillStyle = 'red';
+    // Small lights - blink faster when digging
+    const blinkRate = player.isDigging ? 150 : 500;
+    const blinkPhase = Math.floor(Date.now() / blinkRate) % 2;
+    
+    ctx.fillStyle = player.isDigging && blinkPhase === 0 ? '#ff6666' : 'red';
     ctx.beginPath();
-    ctx.arc(x + width * 0.35, y + height * 0.45, width * 0.05, 0, Math.PI * 2);
+    ctx.arc(x + width * 0.35, y + height * 0.45 + diggingOffset, width * 0.05, 0, Math.PI * 2);
     ctx.fill();
     
-    ctx.fillStyle = 'green';
+    ctx.fillStyle = player.isDigging && blinkPhase === 1 ? '#66ff66' : 'green';
     ctx.beginPath();
-    ctx.arc(x + width * 0.65, y + height * 0.45, width * 0.05, 0, Math.PI * 2);
+    ctx.arc(x + width * 0.65, y + height * 0.45 + diggingOffset, width * 0.05, 0, Math.PI * 2);
     ctx.fill();
     
-    // Energy meter
+    // Energy meter - pulsing when digging
     const energyPercentage = Math.min(1, player.energy / 100);
+    const meterPulse = player.isDigging ? 1 + Math.sin(Date.now() / 100) * 0.1 : 1;
+    
     ctx.fillStyle = '#333';
-    ctx.fillRect(x + width * 0.25, y + height * 0.6, width * 0.5, height * 0.1);
+    ctx.fillRect(x + width * 0.25, y + height * 0.6 + diggingOffset, width * 0.5, height * 0.1);
     
     // Energy level
     ctx.fillStyle = energyPercentage < 0.2 ? 'red' : (energyPercentage < 0.5 ? 'yellow' : 'green');
-    ctx.fillRect(x + width * 0.27, y + height * 0.62, width * 0.46 * energyPercentage, height * 0.06);
+    ctx.fillRect(x + width * 0.27, y + height * 0.62 + diggingOffset, 
+                width * 0.46 * energyPercentage * meterPulse, height * 0.06);
+    
+    // Add sweat drops when digging
+    if (player.isDigging && Math.random() < 0.05) {
+        particles.push({
+            x: x + width * 0.5 + (Math.random() - 0.5) * width * 0.3,
+            y: y + height * 0.1,
+            vx: (Math.random() - 0.5) * 1,
+            vy: 1 + Math.random() * 2,
+            size: 2 + Math.random() * 2,
+            color: 'rgba(150, 220, 255, 0.7)',
+            life: 20 + Math.random() * 15
+        });
+    }
 }
 
 // Game loop
