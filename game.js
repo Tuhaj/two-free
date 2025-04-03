@@ -15,6 +15,7 @@ const leftBtn = document.getElementById('leftBtn');
 const rightBtn = document.getElementById('rightBtn');
 const jumpBtn = document.getElementById('jumpBtn');
 const digBtn = document.getElementById('digBtn');
+const pauseBtn = document.getElementById('pauseBtn');
 
 // Game settings
 const GRAVITY = 0.5;
@@ -46,6 +47,7 @@ let currentLevel = 1;
 let totalDiamonds = 0;
 let levelComplete = false;
 let levelTransitionTimer = 0;
+let gamePaused = false;
 
 // Achievements system
 const achievements = [
@@ -103,6 +105,7 @@ function init() {
     // Reset game state
     currentLevel = 1;
     totalDiamonds = 0;
+    gamePaused = false;
     
     // Reset achievements
     achievements.forEach(achievement => {
@@ -112,6 +115,7 @@ function init() {
     // Update displays
     updateLevelDisplay();
     updateDiamondDisplay();
+    updatePauseButtonAppearance();
     
     // Generate world terrain
     generateWorld();
@@ -129,6 +133,13 @@ function init() {
     // Handle window resize
     window.addEventListener('resize', handleResize);
     handleResize();
+    
+    // Auto-pause when window loses focus
+    window.addEventListener('blur', () => {
+        if (!gamePaused) {
+            gamePaused = true;
+        }
+    });
     
     // Start game loop
     requestAnimationFrame(gameLoop);
@@ -181,6 +192,14 @@ function setupTouchControls() {
         touchControls.dig = false;
     });
     
+    // Pause button
+    pauseBtn.addEventListener('touchstart', () => {
+        togglePause();
+    });
+    pauseBtn.addEventListener('mousedown', () => {
+        togglePause();
+    });
+    
     // Also add mouse events for testing on desktop
     leftBtn.addEventListener('mousedown', () => {
         touchControls.left = true;
@@ -203,6 +222,26 @@ function setupTouchControls() {
     digBtn.addEventListener('mousedown', () => touchControls.dig = true);
     digBtn.addEventListener('mouseup', () => touchControls.dig = false);
     digBtn.addEventListener('mouseleave', () => touchControls.dig = false);
+    
+    // Keyboard pause
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+            togglePause();
+        }
+    });
+}
+
+// Toggle pause state
+function togglePause() {
+    gamePaused = !gamePaused;
+    updatePauseButtonAppearance();
+}
+
+// Update pause button appearance based on game state
+function updatePauseButtonAppearance() {
+    if (pauseBtn) {
+        pauseBtn.innerHTML = gamePaused ? '▶️' : '⏸️';
+    }
 }
 
 // Handle window resize
@@ -543,7 +582,10 @@ function updateCountdown() {
     
     if (levelTransitionTimer > 0) {
         setTimeout(() => {
-            levelTransitionTimer--;
+            // Only decrease the timer if the game is not paused
+            if (!gamePaused) {
+                levelTransitionTimer--;
+            }
             updateCountdown();
         }, 1000);
     } else {
@@ -909,16 +951,18 @@ function drawDigEffect() {
         ctx.fillStyle = `rgba(150, 75, 0, ${digEffect.opacity})`;
         ctx.fill();
         
-        // Update effect
-        if (digEffect.growing) {
-            digEffect.radius += 1;
-            if (digEffect.radius >= digEffect.maxRadius) {
-                digEffect.growing = false;
-            }
-        } else {
-            digEffect.opacity -= 0.1;
-            if (digEffect.opacity <= 0) {
-                digEffect = null;
+        // Update effect if not paused
+        if (!gamePaused) {
+            if (digEffect.growing) {
+                digEffect.radius += 1;
+                if (digEffect.radius >= digEffect.maxRadius) {
+                    digEffect.growing = false;
+                }
+            } else {
+                digEffect.opacity -= 0.1;
+                if (digEffect.opacity <= 0) {
+                    digEffect = null;
+                }
             }
         }
     }
@@ -929,13 +973,15 @@ function updateAndDrawParticles() {
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         
-        // Update position
-        p.x += p.vx || 0;
-        p.y += p.vy || 0;
-        if (p.vy !== undefined && !p.text) {
-            p.vy += 0.1; // Gravity for non-text particles
+        // Update position if not paused
+        if (!gamePaused) {
+            p.x += p.vx || 0;
+            p.y += p.vy || 0;
+            if (p.vy !== undefined && !p.text) {
+                p.vy += 0.1; // Gravity for non-text particles
+            }
+            p.life -= 1;
         }
-        p.life -= 1;
         
         // Check if it's a text particle
         if (p.text) {
@@ -963,8 +1009,8 @@ function updateAndDrawParticles() {
             ctx.globalAlpha = 1;
         }
         
-        // Remove dead particles
-        if (p.life <= 0) {
+        // Remove dead particles only if not paused
+        if (p.life <= 0 && !gamePaused) {
             particles.splice(i, 1);
         }
     }
@@ -1185,36 +1231,44 @@ function gameLoop(timestamp) {
     
     // Only update at our target frame rate
     if (elapsed > frameTime) {
-        // Update missiles and war background elements
-        updateMissiles();
-        
-        // Only update player if level is not complete and not hit by missile
-        if (!levelComplete && !(playerHit && Date.now() - hitTime < 500)) {
-            // Update game state
-            updatePlayer();
+        // Skip updates if game is paused, but still draw
+        if (!gamePaused) {
+            // Update missiles and war background elements
+            updateMissiles();
             
-            // Check if all treasures have been collected (additional check)
-            let allCollected = true;
-            let hasTreasures = false;
-            
-            for (let i = 0; i < treasures.length; i++) {
-                if (treasures[i]) {
-                    hasTreasures = true;
-                    if (!treasures[i].collected) {
-                        allCollected = false;
-                        break;
+            // Only update player if level is not complete and not hit by missile
+            if (!levelComplete && !(playerHit && Date.now() - hitTime < 500)) {
+                // Update game state
+                updatePlayer();
+                
+                // Check if all treasures have been collected (additional check)
+                let allCollected = true;
+                let hasTreasures = false;
+                
+                for (let i = 0; i < treasures.length; i++) {
+                    if (treasures[i]) {
+                        hasTreasures = true;
+                        if (!treasures[i].collected) {
+                            allCollected = false;
+                            break;
+                        }
                     }
                 }
-            }
-            
-            if (hasTreasures && allCollected && !levelComplete) {
-                console.log("Level complete detected in game loop!");
-                completeLevelWithSuccess();
+                
+                if (hasTreasures && allCollected && !levelComplete) {
+                    console.log("Level complete detected in game loop!");
+                    completeLevelWithSuccess();
+                }
             }
         }
         
         // Draw everything
         draw();
+        
+        // Draw pause overlay if paused
+        if (gamePaused) {
+            drawPauseOverlay();
+        }
         
         // Reset timestamp
         lastTimestamp = timestamp;
@@ -1222,6 +1276,24 @@ function gameLoop(timestamp) {
     
     // Request next frame
     requestAnimationFrame(gameLoop);
+}
+
+// Draw pause overlay
+function drawPauseOverlay() {
+    // Semi-transparent background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw pause message
+    ctx.font = 'bold 36px Arial';
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME PAUSED', canvas.width / 2, canvas.height / 2 - 20);
+    
+    // Draw instructions to resume
+    ctx.font = '20px Arial';
+    ctx.fillText('Tap pause button to resume', canvas.width / 2, canvas.height / 2 + 20);
+    ctx.fillText('or press P / ESC key', canvas.width / 2, canvas.height / 2 + 50);
 }
 
 // Start the game
@@ -1563,12 +1635,12 @@ function updateMissiles() {
     const currentTime = Date.now();
     
     // Create random background missiles
-    if (Math.random() < 0.01 && warBackgroundElements.missiles.length < 5) {
+    if (!gamePaused && Math.random() < 0.01 && warBackgroundElements.missiles.length < 5) {
         createDistantMissile();
     }
     
     // Check if it's time for a missile attack
-    if (currentTime >= nextMissileAttack && !levelComplete && !missileWarning && !incomingMissile) {
+    if (!gamePaused && currentTime >= nextMissileAttack && !levelComplete && !missileWarning && !incomingMissile) {
         createIncomingMissile();
     }
     
@@ -1576,14 +1648,16 @@ function updateMissiles() {
     warBackgroundElements.missiles = warBackgroundElements.missiles.filter(missile => {
         if (missile.exploded) return false;
         
-        // Move missile
-        const vx = Math.cos(missile.angle) * missile.speed;
-        const vy = Math.sin(missile.angle) * missile.speed;
-        missile.x += vx;
-        missile.y += vy;
-        
-        // Add to trail
-        missile.trail.push({x: missile.x, y: missile.y, age: 0});
+        // Move missile (only if game not paused)
+        if (!gamePaused) {
+            const vx = Math.cos(missile.angle) * missile.speed;
+            const vy = Math.sin(missile.angle) * missile.speed;
+            missile.x += vx;
+            missile.y += vy;
+            
+            // Add to trail
+            missile.trail.push({x: missile.x, y: missile.y, age: 0});
+        }
         
         // Check if missile has reached its target
         const dx = missile.targetX - missile.x;
@@ -1612,7 +1686,7 @@ function updateMissiles() {
     // Update incoming missile
     if (incomingMissile) {
         // If warning phase is complete, move the missile
-        if (currentTime - missileWarningStarted >= WARNING_DURATION) {
+        if (!gamePaused && currentTime - missileWarningStarted >= WARNING_DURATION) {
             missileWarning = false;
             
             // Move missile
@@ -1640,7 +1714,7 @@ function updateMissiles() {
     
     // Update missile trails
     for (let missile of warBackgroundElements.missiles.concat(incomingMissile ? [incomingMissile] : [])) {
-        if (missile) {
+        if (missile && !gamePaused) {
             missile.trail = missile.trail.filter(point => {
                 point.age++;
                 return point.age < 20; // Trail length
@@ -1650,14 +1724,16 @@ function updateMissiles() {
     
     // Update background explosions
     warBackgroundElements.explosions = warBackgroundElements.explosions.filter(explosion => {
-        explosion.frame++;
+        if (!gamePaused) explosion.frame++;
         return explosion.frame < explosion.maxFrames;
     });
     
     // Update smoke clouds
     warBackgroundElements.smokeClouds = warBackgroundElements.smokeClouds.filter(cloud => {
-        cloud.x += cloud.vx;
-        cloud.life--;
+        if (!gamePaused) {
+            cloud.x += cloud.vx;
+            cloud.life--;
+        }
         return cloud.life > 0;
     });
 }
