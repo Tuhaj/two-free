@@ -525,7 +525,10 @@ function collectTreasures() {
 
 // Complete the current level with success
 function completeLevelWithSuccess() {
+    console.log("Level complete!");
     levelComplete = true;
+    
+    // Force the level complete div to be visible
     levelCompleteDiv.style.display = 'block';
     
     // Calculate bonus based on energy and level
@@ -642,7 +645,7 @@ function draw() {
         ctx.fillRect(player.x + 5, player.y + 10, 5, 5);
     }
     
-    // Draw level number in the center of the screen
+    // Draw overlay when level is complete
     if (levelComplete) {
         // Draw slightly transparent overlay
         ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
@@ -662,6 +665,25 @@ function gameLoop(timestamp) {
         if (!levelComplete) {
             // Update game state
             updatePlayer();
+            
+            // Check if all treasures have been collected (additional check)
+            let allCollected = true;
+            let hasTreasures = false;
+            
+            for (let i = 0; i < treasures.length; i++) {
+                if (treasures[i]) {
+                    hasTreasures = true;
+                    if (!treasures[i].collected) {
+                        allCollected = false;
+                        break;
+                    }
+                }
+            }
+            
+            if (hasTreasures && allCollected && !levelComplete) {
+                console.log("Level complete detected in game loop!");
+                completeLevelWithSuccess();
+            }
         }
         
         // Draw everything
