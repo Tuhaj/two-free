@@ -35,6 +35,25 @@
             color: white;
             font-size: 18px;
             text-shadow: 1px 1px 2px black;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        #level-complete {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+        #level-complete h2 {
+            margin-top: 0;
+            color: gold;
         }
         #touch-controls {
             display: none;
@@ -74,7 +93,19 @@
 <body>
     <div id="game-container">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
-        <div id="ui">Energy: <span id="energyDisplay">0</span></div>
+        <div id="ui">
+            <div>Energy: <span id="energyDisplay">0</span></div>
+            <div>Level: <span id="levelDisplay">1</span></div>
+            <div>Score: <span id="scoreDisplay">0</span></div>
+        </div>
+        
+        <div id="level-complete">
+            <h2>Level Complete!</h2>
+            <p>You collected all treasures!</p>
+            <p>Level bonus: <span id="levelBonus">0</span></p>
+            <p>Total score: <span id="totalScore">0</span></p>
+            <p>Next level starting in <span id="countdown">3</span>...</p>
+        </div>
         
         <div id="touch-controls">
             <div class="control-row">

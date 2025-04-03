@@ -2,6 +2,12 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const energyDisplay = document.getElementById('energyDisplay');
+const levelDisplay = document.getElementById('levelDisplay');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const levelCompleteDiv = document.getElementById('level-complete');
+const levelBonusSpan = document.getElementById('levelBonus');
+const totalScoreSpan = document.getElementById('totalScore');
+const countdownSpan = document.getElementById('countdown');
 
 // Touch control elements
 const leftBtn = document.getElementById('leftBtn');
@@ -15,6 +21,12 @@ const JUMP_FORCE = -12;
 const MOVEMENT_SPEED = 5;
 const DIG_SPEED = 3;
 const TILE_SIZE = 32;
+
+// Game state
+let currentLevel = 1;
+let totalScore = 0;
+let levelComplete = false;
+let levelTransitionTimer = 0;
 
 // Player
 let player = {
@@ -52,6 +64,14 @@ const frameTime = 1000 / FPS;
 
 // Initialize game
 function init() {
+    // Reset game state
+    currentLevel = 1;
+    totalScore = 0;
+    
+    // Update displays
+    updateLevelDisplay();
+    scoreDisplay.textContent = "0";
+    
     // Generate world terrain
     generateWorld();
     
@@ -159,6 +179,12 @@ function handleResize() {
 
 // Generate world with terrain and treasures
 function generateWorld() {
+    // Clear existing treasures
+    treasures = [];
+    
+    // Reset level completion state
+    levelComplete = false;
+    
     // Initialize empty world
     for (let y = 0; y < worldHeight; y++) {
         world[y] = [];
@@ -171,12 +197,13 @@ function generateWorld() {
             else if (y < worldHeight - 1) {
                 world[y][x] = 1; // 1 = dirt
                 
-                // Random treasures in dirt
-                if (Math.random() < 0.1) {
+                // Random treasures in dirt - increased chance based on level
+                if (Math.random() < 0.1 + (currentLevel * 0.01)) {
                     treasures.push({
                         x: x * TILE_SIZE,
                         y: y * TILE_SIZE,
-                        collected: false
+                        collected: false,
+                        value: Math.floor(Math.random() * currentLevel) + 5 // Value increases with level
                     });
                 }
             }
@@ -411,6 +438,8 @@ function dig() {
         
         // First check if there's a treasure at dig location
         let treasureFound = false;
+        let treasureValue = 0;
+        
         for (let i = 0; i < treasures.length; i++) {
             const treasure = treasures[i];
             if (!treasure.collected) {
@@ -420,9 +449,12 @@ function dig() {
                 if (treasureTileX === digX && treasureTileY === digY) {
                     // Collect treasure through digging
                     treasure.collected = true;
-                    player.energy += 5;
-                    updateEnergyDisplay();
                     treasureFound = true;
+                    treasureValue = treasure.value;
+                    
+                    // Increase energy
+                    player.energy += treasureValue;
+                    updateEnergyDisplay();
                     break;
                 }
             }
@@ -443,14 +475,31 @@ function dig() {
                 updateEnergyDisplay();
             }
         }
+        
+        // Check if all treasures have been collected
+        let allCollected = true;
+        for (let i = 0; i < treasures.length; i++) {
+            if (!treasures[i].collected) {
+                allCollected = false;
+                break;
+            }
+        }
+        
+        if (allCollected && treasures.length > 0 && !levelComplete) {
+            completeLevelWithSuccess();
+        }
     }
 }
 
 // Collect treasures
 function collectTreasures() {
+    let allCollected = true;
+    
     for (let i = 0; i < treasures.length; i++) {
         const treasure = treasures[i];
         if (!treasure.collected) {
+            allCollected = false;
+            
             // Check collision with player
             if (
                 player.x + player.width > treasure.x &&
@@ -462,11 +511,73 @@ function collectTreasures() {
                 treasure.collected = true;
                 
                 // Increase energy
-                player.energy += 5;
+                player.energy += treasure.value;
                 updateEnergyDisplay();
             }
         }
     }
+    
+    // Check if all treasures have been collected
+    if (allCollected && treasures.length > 0 && !levelComplete) {
+        completeLevelWithSuccess();
+    }
+}
+
+// Complete the current level with success
+function completeLevelWithSuccess() {
+    levelComplete = true;
+    levelCompleteDiv.style.display = 'block';
+    
+    // Calculate bonus based on energy and level
+    const levelBonus = Math.floor(player.energy * currentLevel);
+    totalScore += levelBonus;
+    
+    // Update UI
+    levelBonusSpan.textContent = levelBonus;
+    totalScoreSpan.textContent = totalScore;
+    scoreDisplay.textContent = totalScore;
+    
+    // Start countdown to next level
+    levelTransitionTimer = 3;
+    updateCountdown();
+}
+
+// Update the countdown timer
+function updateCountdown() {
+    countdownSpan.textContent = levelTransitionTimer;
+    
+    if (levelTransitionTimer > 0) {
+        setTimeout(() => {
+            levelTransitionTimer--;
+            updateCountdown();
+        }, 1000);
+    } else {
+        // Start next level
+        startNextLevel();
+    }
+}
+
+// Start the next level
+function startNextLevel() {
+    currentLevel++;
+    updateLevelDisplay();
+    
+    // Reset player position but keep energy and score
+    player.x = canvas.width / 2;
+    player.y = 300;
+    player.velocityX = 0;
+    player.velocityY = 0;
+    
+    // Generate new world
+    generateWorld();
+    
+    // Hide level complete overlay
+    levelCompleteDiv.style.display = 'none';
+}
+
+// Update level display
+function updateLevelDisplay() {
+    levelDisplay.textContent = currentLevel;
 }
 
 // Update energy display
@@ -500,11 +611,13 @@ function draw() {
         }
     }
     
-    // Draw treasures
+    // Draw treasures with different colors based on value
     for (let i = 0; i < treasures.length; i++) {
         const treasure = treasures[i];
         if (!treasure.collected) {
-            ctx.fillStyle = '#FFD700';
+            // Color based on value
+            const colorValue = Math.min(255, 100 + (treasure.value * 10));
+            ctx.fillStyle = `rgb(${colorValue}, ${Math.floor(colorValue/2)}, 0)`;
             ctx.beginPath();
             ctx.arc(
                 treasure.x + TILE_SIZE / 2,
@@ -528,6 +641,13 @@ function draw() {
     } else {
         ctx.fillRect(player.x + 5, player.y + 10, 5, 5);
     }
+    
+    // Draw level number in the center of the screen
+    if (levelComplete) {
+        // Draw slightly transparent overlay
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 }
 
 // Game loop
@@ -538,8 +658,11 @@ function gameLoop(timestamp) {
     
     // Only update at our target frame rate
     if (elapsed > frameTime) {
-        // Update game state
-        updatePlayer();
+        // Only update player if level is not complete
+        if (!levelComplete) {
+            // Update game state
+            updatePlayer();
+        }
         
         // Draw everything
         draw();
