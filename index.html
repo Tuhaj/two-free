@@ -14,13 +14,19 @@
             height: 100vh;
             background-color: #87CEEB;
             font-family: Arial, sans-serif;
+            touch-action: none;
         }
         canvas {
             border: 3px solid #333;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            max-width: 100%;
+            max-height: 80vh;
         }
         #game-container {
             position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         #ui {
             position: absolute;
@@ -30,12 +36,56 @@
             font-size: 18px;
             text-shadow: 1px 1px 2px black;
         }
+        #touch-controls {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+        }
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .control-btn {
+            background-color: rgba(255, 255, 255, 0.7);
+            border: 2px solid #333;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            user-select: none;
+        }
+        .control-btn.large {
+            width: 80px;
+            height: 80px;
+        }
+        @media (max-width: 800px) or (pointer: coarse) {
+            #touch-controls {
+                display: block;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         <div id="ui">Energy: <span id="energyDisplay">0</span></div>
+        
+        <div id="touch-controls">
+            <div class="control-row">
+                <div id="jumpBtn" class="control-btn large">↑</div>
+            </div>
+            <div class="control-row">
+                <div id="leftBtn" class="control-btn">←</div>
+                <div id="rightBtn" class="control-btn">→</div>
+                <div id="digBtn" class="control-btn">↓</div>
+            </div>
+        </div>
     </div>
     <script src="game.js"></script>
 </body>

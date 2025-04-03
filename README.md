@@ -13,6 +13,13 @@ A Mario-like treasure digging game where you collect treasures to gain energy, w
 4. More energy allows you to move faster
 5. Digging consumes energy
 
+### Tablet Support
+
+On tablets or touch devices:
+- Touch controls will automatically appear at the bottom of the screen
+- Use the arrow buttons to move left (←), right (→), jump (↑), and dig (↓)
+- The game automatically scales to fit your device's screen
+
 ## Game Mechanics
 
 - The player starts with 10 energy

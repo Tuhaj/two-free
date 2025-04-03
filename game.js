@@ -3,6 +3,12 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const energyDisplay = document.getElementById('energyDisplay');
 
+// Touch control elements
+const leftBtn = document.getElementById('leftBtn');
+const rightBtn = document.getElementById('rightBtn');
+const jumpBtn = document.getElementById('jumpBtn');
+const digBtn = document.getElementById('digBtn');
+
 // Game settings
 const GRAVITY = 0.5;
 const JUMP_FORCE = -12;
@@ -32,21 +38,106 @@ let treasures = [];
 
 // Controls
 const keys = {};
+const touchControls = {
+    left: false,
+    right: false,
+    jump: false,
+    dig: false
+};
 
 // Initialize game
 function init() {
     // Generate world terrain
     generateWorld();
     
-    // Add event listeners for controls
+    // Add event listeners for keyboard controls
     window.addEventListener('keydown', e => keys[e.key] = true);
     window.addEventListener('keyup', e => keys[e.key] = false);
+    
+    // Add event listeners for touch controls
+    setupTouchControls();
+    
+    // Handle window resize
+    window.addEventListener('resize', handleResize);
+    handleResize();
     
     // Start game loop
     requestAnimationFrame(gameLoop);
     
     // Update energy display
     updateEnergyDisplay();
+}
+
+// Setup touch controls
+function setupTouchControls() {
+    // Left button
+    leftBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        touchControls.left = true;
+    });
+    leftBtn.addEventListener('touchend', () => {
+        touchControls.left = false;
+    });
+    
+    // Right button
+    rightBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        touchControls.right = true;
+    });
+    rightBtn.addEventListener('touchend', () => {
+        touchControls.right = false;
+    });
+    
+    // Jump button
+    jumpBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        touchControls.jump = true;
+    });
+    jumpBtn.addEventListener('touchend', () => {
+        touchControls.jump = false;
+    });
+    
+    // Dig button
+    digBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        touchControls.dig = true;
+    });
+    digBtn.addEventListener('touchend', () => {
+        touchControls.dig = false;
+    });
+    
+    // Also add mouse events for testing on desktop
+    leftBtn.addEventListener('mousedown', () => touchControls.left = true);
+    leftBtn.addEventListener('mouseup', () => touchControls.left = false);
+    leftBtn.addEventListener('mouseleave', () => touchControls.left = false);
+    
+    rightBtn.addEventListener('mousedown', () => touchControls.right = true);
+    rightBtn.addEventListener('mouseup', () => touchControls.right = false);
+    rightBtn.addEventListener('mouseleave', () => touchControls.right = false);
+    
+    jumpBtn.addEventListener('mousedown', () => touchControls.jump = true);
+    jumpBtn.addEventListener('mouseup', () => touchControls.jump = false);
+    jumpBtn.addEventListener('mouseleave', () => touchControls.jump = false);
+    
+    digBtn.addEventListener('mousedown', () => touchControls.dig = true);
+    digBtn.addEventListener('mouseup', () => touchControls.dig = false);
+    digBtn.addEventListener('mouseleave', () => touchControls.dig = false);
+}
+
+// Handle window resize
+function handleResize() {
+    // Make sure the canvas maintains aspect ratio but fits the screen
+    const gameContainer = document.getElementById('game-container');
+    const containerWidth = gameContainer.clientWidth;
+    
+    if (containerWidth < canvas.width) {
+        const scale = containerWidth / canvas.width;
+        canvas.style.width = `${canvas.width * scale}px`;
+        canvas.style.height = `${canvas.height * scale}px`;
+    } else {
+        canvas.style.width = `${canvas.width}px`;
+        canvas.style.height = `${canvas.height}px`;
+    }
 }
 
 // Generate world with terrain and treasures
@@ -83,10 +174,10 @@ function generateWorld() {
 // Update player position and handle input
 function updatePlayer() {
     // Handle horizontal movement
-    if (keys['ArrowLeft'] || keys['a']) {
+    if (keys['ArrowLeft'] || keys['a'] || touchControls.left) {
         player.velocityX = -MOVEMENT_SPEED * (1 + player.energy / 50);
         player.facingRight = false;
-    } else if (keys['ArrowRight'] || keys['d']) {
+    } else if (keys['ArrowRight'] || keys['d'] || touchControls.right) {
         player.velocityX = MOVEMENT_SPEED * (1 + player.energy / 50);
         player.facingRight = true;
     } else {
@@ -94,13 +185,13 @@ function updatePlayer() {
     }
     
     // Handle jumping
-    if ((keys['ArrowUp'] || keys['w'] || keys[' ']) && !player.isJumping) {
+    if ((keys['ArrowUp'] || keys['w'] || keys[' '] || touchControls.jump) && !player.isJumping) {
         player.velocityY = JUMP_FORCE;
         player.isJumping = true;
     }
     
     // Handle digging
-    player.isDigging = keys['ArrowDown'] || keys['s'];
+    player.isDigging = keys['ArrowDown'] || keys['s'] || touchControls.dig;
     if (player.isDigging && player.energy > 0) {
         dig();
     }
