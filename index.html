@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Two Free</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        
         body {
             margin: 0;
             padding: 0;
@@ -12,67 +14,136 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #87CEEB;
-            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #041e42, #0a3a6a);
+            font-family: 'Orbitron', sans-serif;
             touch-action: none;
+            color: white;
         }
+        
+        #game-wrapper {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(0, 100, 255, 0.4);
+            border: 2px solid #4a6d8c;
+        }
+        
         canvas {
-            border: 3px solid #333;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            display: block;
             max-width: 100%;
             max-height: 80vh;
         }
+        
         #game-container {
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
+        
+        #title-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 20, 40, 0.7);
+            padding: 5px 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        
+        .game-title {
+            font-size: 24px;
+            color: #66CCFF;
+            text-shadow: 0 0 10px rgba(102, 204, 255, 0.7);
+            margin: 0;
+        }
+        
         #ui {
             position: absolute;
-            top: 10px;
-            left: 10px;
+            top: 50px;
+            left: 15px;
             color: white;
             font-size: 18px;
             text-shadow: 1px 1px 2px black;
             display: flex;
             flex-direction: column;
             gap: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(102, 204, 255, 0.5);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .stat-icon {
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(102, 204, 255, 0.3);
+            margin-right: 8px;
+            border-radius: 4px;
+        }
+        
         #level-complete {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 20, 40, 0.9);
             color: white;
-            padding: 20px;
-            border-radius: 10px;
+            padding: 30px;
+            border-radius: 15px;
             text-align: center;
             display: none;
             z-index: 1000;
             width: 80%;
             max-width: 400px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 30px rgba(102, 204, 255, 0.7);
+            border: 2px solid #66CCFF;
         }
+        
         #level-complete h2 {
             margin-top: 0;
-            color: gold;
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
         }
+        
+        #level-complete p {
+            margin: 15px 0;
+        }
+        
+        .highlight {
+            color: #66CCFF;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
         #touch-controls {
             display: none;
             width: 100%;
             max-width: 800px;
             margin-top: 20px;
         }
+        
         .control-row {
             display: flex;
             justify-content: space-between;
             margin-bottom: 10px;
         }
+        
         .control-btn {
-            background-color: rgba(255, 255, 255, 0.7);
-            border: 2px solid #333;
+            background: rgba(102, 204, 255, 0.3);
+            border: 2px solid #66CCFF;
             border-radius: 50%;
             width: 60px;
             height: 60px;
@@ -82,11 +153,21 @@
             font-size: 24px;
             font-weight: bold;
             user-select: none;
+            color: white;
+            box-shadow: 0 0 10px rgba(102, 204, 255, 0.5);
+            transition: all 0.2s;
         }
+        
+        .control-btn:active {
+            background: rgba(102, 204, 255, 0.6);
+            transform: scale(0.95);
+        }
+        
         .control-btn.large {
             width: 80px;
             height: 80px;
         }
+        
         @media (max-width: 800px) or (pointer: coarse) {
             #touch-controls {
                 display: block;
@@ -95,30 +176,46 @@
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        <div id="ui">
-            <div>Energy: <span id="energyDisplay">0</span></div>
-            <div>Level: <span id="levelDisplay">1</span></div>
-            <div>Score: <span id="scoreDisplay">0</span></div>
+    <div id="game-wrapper">
+        <div id="title-bar">
+            <h1 class="game-title">TWO FREE</h1>
         </div>
         
-        <div id="level-complete">
-            <h2>Level Complete!</h2>
-            <p>You collected all treasures!</p>
-            <p>Level bonus: <span id="levelBonus">0</span></p>
-            <p>Total score: <span id="totalScore">0</span></p>
-            <p>Next level starting in <span id="countdown">3</span>...</p>
-        </div>
-        
-        <div id="touch-controls">
-            <div class="control-row">
-                <div id="jumpBtn" class="control-btn large">↑</div>
+        <div id="game-container">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            
+            <div id="ui">
+                <div class="stat-item">
+                    <div class="stat-icon">⚡</div>
+                    <div>Energy: <span id="energyDisplay">0</span></div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">🏆</div>
+                    <div>Level: <span id="levelDisplay">1</span></div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">💎</div>
+                    <div>Score: <span id="scoreDisplay">0</span></div>
+                </div>
             </div>
-            <div class="control-row">
-                <div id="leftBtn" class="control-btn">←</div>
-                <div id="rightBtn" class="control-btn">→</div>
-                <div id="digBtn" class="control-btn">↓</div>
+            
+            <div id="level-complete">
+                <h2>Level Complete!</h2>
+                <p>You collected all treasures!</p>
+                <p>Level bonus: <span id="levelBonus" class="highlight">0</span></p>
+                <p>Total score: <span id="totalScore" class="highlight">0</span></p>
+                <p>Next level starting in <span id="countdown" class="highlight">3</span>...</p>
+            </div>
+            
+            <div id="touch-controls">
+                <div class="control-row">
+                    <div id="jumpBtn" class="control-btn large">↑</div>
+                </div>
+                <div class="control-row">
+                    <div id="leftBtn" class="control-btn">←</div>
+                    <div id="rightBtn" class="control-btn">→</div>
+                    <div id="digBtn" class="control-btn">↓</div>
+                </div>
             </div>
         </div>
     </div>
