@@ -274,9 +274,15 @@ function updatePlayer() {
 
 // Handle horizontal collisions separately
 function handleHorizontalCollisions() {
+    // Store original position to check if we've moved
+    const originalX = player.x;
+    
     // Get player's tile position
     const tileX = Math.floor(player.x / TILE_SIZE);
     const tileY = Math.floor(player.y / TILE_SIZE);
+    
+    // Flag to track if we've found a collision
+    let collisionDetected = false;
     
     // Check tiles around player
     for (let y = tileY; y <= tileY + 1; y++) {
@@ -300,10 +306,16 @@ function handleHorizontalCollisions() {
                 player.y + player.height > tileTop &&
                 player.y < tileBottom
             ) {
-                // Horizontal collision resolution based on movement direction
-                if (player.velocityX > 0) {
+                collisionDetected = true;
+                
+                // Horizontal collision resolution based on movement direction and overlap
+                const overlapRight = player.x + player.width - tileLeft;
+                const overlapLeft = tileRight - player.x;
+                
+                // Only apply collision resolution based on player's current movement direction
+                if (player.velocityX > 0 && overlapRight < overlapLeft) {
                     player.x = tileLeft - player.width;
-                } else if (player.velocityX < 0) {
+                } else if (player.velocityX < 0 && overlapLeft < overlapRight) {
                     player.x = tileRight;
                 }
                 
@@ -311,14 +323,30 @@ function handleHorizontalCollisions() {
                 break;
             }
         }
+        if (collisionDetected) break;
+    }
+    
+    // If we detected a collision but ended up moving the player backward, restore position
+    if (
+        (player.velocityX > 0 && player.x < originalX) || 
+        (player.velocityX < 0 && player.x > originalX)
+    ) {
+        player.x = originalX;
+        player.velocityX = 0;
     }
 }
 
 // Handle vertical collisions separately
 function handleVerticalCollisions() {
+    // Store original position to check if we've moved
+    const originalY = player.y;
+    
     // Get player's tile position
     const tileX = Math.floor(player.x / TILE_SIZE);
     const tileY = Math.floor(player.y / TILE_SIZE);
+    
+    // Flag to track if we've found a collision
+    let collisionDetected = false;
     
     // Check tiles around player
     for (let y = tileY - 1; y <= tileY + 2; y++) {
@@ -342,12 +370,18 @@ function handleVerticalCollisions() {
                 player.y + player.height > tileTop &&
                 player.y < tileBottom
             ) {
-                // Vertical collision resolution
-                if (player.velocityY > 0) {
+                collisionDetected = true;
+                
+                // Vertical collision resolution based on movement direction and overlap
+                const overlapBottom = player.y + player.height - tileTop;
+                const overlapTop = tileBottom - player.y;
+                
+                // Only apply collision resolution based on player's current movement direction
+                if (player.velocityY > 0 && overlapBottom < overlapTop) {
                     player.y = tileTop - player.height;
                     player.velocityY = 0;
                     player.isJumping = false;
-                } else if (player.velocityY < 0) {
+                } else if (player.velocityY < 0 && overlapTop < overlapBottom) {
                     player.y = tileBottom;
                     player.velocityY = 0;
                 }
@@ -355,6 +389,16 @@ function handleVerticalCollisions() {
                 break;
             }
         }
+        if (collisionDetected) break;
+    }
+    
+    // If we detected a collision but ended up moving the player incorrectly, restore position
+    if (
+        (player.velocityY > 0 && player.y < originalY) || 
+        (player.velocityY < 0 && player.y > originalY)
+    ) {
+        player.y = originalY;
+        player.velocityY = 0;
     }
 }
 
@@ -365,6 +409,25 @@ function dig() {
         const digX = Math.floor((player.x + (player.facingRight ? player.width : 0)) / TILE_SIZE);
         const digY = Math.floor((player.y + player.height) / TILE_SIZE);
         
+        // First check if there's a treasure at dig location
+        let treasureFound = false;
+        for (let i = 0; i < treasures.length; i++) {
+            const treasure = treasures[i];
+            if (!treasure.collected) {
+                const treasureTileX = Math.floor(treasure.x / TILE_SIZE);
+                const treasureTileY = Math.floor(treasure.y / TILE_SIZE);
+                
+                if (treasureTileX === digX && treasureTileY === digY) {
+                    // Collect treasure through digging
+                    treasure.collected = true;
+                    player.energy += 5;
+                    updateEnergyDisplay();
+                    treasureFound = true;
+                    break;
+                }
+            }
+        }
+        
         // Check if valid dig location
         if (
             digX >= 0 && digX < worldWidth &&
@@ -374,9 +437,11 @@ function dig() {
             // Remove the block
             world[digY][digX] = 0;
             
-            // Decrease energy
-            player.energy -= 0.1;
-            updateEnergyDisplay();
+            // Decrease energy only if no treasure was found
+            if (!treasureFound) {
+                player.energy -= 0.1;
+                updateEnergyDisplay();
+            }
         }
     }
 }
