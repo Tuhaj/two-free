@@ -45,6 +45,11 @@ const touchControls = {
     dig: false
 };
 
+// Game loop variables
+let lastTimestamp = 0;
+const FPS = 60;
+const frameTime = 1000 / FPS;
+
 // Initialize game
 function init() {
     // Generate world terrain
@@ -70,27 +75,34 @@ function init() {
 
 // Setup touch controls
 function setupTouchControls() {
+    // Prevent default touch behaviors on the control buttons
+    const controlButtons = document.querySelectorAll('.control-btn');
+    controlButtons.forEach(btn => {
+        btn.addEventListener('touchstart', e => e.preventDefault());
+        btn.addEventListener('touchend', e => e.preventDefault());
+        btn.addEventListener('touchmove', e => e.preventDefault());
+    });
+    
     // Left button
-    leftBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
+    leftBtn.addEventListener('touchstart', () => {
         touchControls.left = true;
+        touchControls.lastLeftTouch = Date.now();
     });
     leftBtn.addEventListener('touchend', () => {
         touchControls.left = false;
     });
     
     // Right button
-    rightBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
+    rightBtn.addEventListener('touchstart', () => {
         touchControls.right = true;
+        touchControls.lastRightTouch = Date.now();
     });
     rightBtn.addEventListener('touchend', () => {
         touchControls.right = false;
     });
     
     // Jump button
-    jumpBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
+    jumpBtn.addEventListener('touchstart', () => {
         touchControls.jump = true;
     });
     jumpBtn.addEventListener('touchend', () => {
@@ -98,8 +110,7 @@ function setupTouchControls() {
     });
     
     // Dig button
-    digBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
+    digBtn.addEventListener('touchstart', () => {
         touchControls.dig = true;
     });
     digBtn.addEventListener('touchend', () => {
@@ -107,11 +118,17 @@ function setupTouchControls() {
     });
     
     // Also add mouse events for testing on desktop
-    leftBtn.addEventListener('mousedown', () => touchControls.left = true);
+    leftBtn.addEventListener('mousedown', () => {
+        touchControls.left = true;
+        touchControls.lastLeftTouch = Date.now();
+    });
     leftBtn.addEventListener('mouseup', () => touchControls.left = false);
     leftBtn.addEventListener('mouseleave', () => touchControls.left = false);
     
-    rightBtn.addEventListener('mousedown', () => touchControls.right = true);
+    rightBtn.addEventListener('mousedown', () => {
+        touchControls.right = true;
+        touchControls.lastRightTouch = Date.now();
+    });
     rightBtn.addEventListener('mouseup', () => touchControls.right = false);
     rightBtn.addEventListener('mouseleave', () => touchControls.right = false);
     
@@ -173,13 +190,49 @@ function generateWorld() {
 
 // Update player position and handle input
 function updatePlayer() {
-    // Handle horizontal movement
-    if (keys['ArrowLeft'] || keys['a'] || touchControls.left) {
+    // Handle horizontal movement - make sure only one direction is active at a time
+    let movingLeft = keys['ArrowLeft'] || keys['a'] || touchControls.left;
+    let movingRight = keys['ArrowRight'] || keys['d'] || touchControls.right;
+    
+    // If both left and right are pressed, prioritize the last pressed direction
+    if (movingLeft && movingRight) {
+        // For touch controls, prefer the most recently activated one
+        if (touchControls.left && touchControls.right) {
+            const lastLeftTouch = touchControls.lastLeftTouch || 0;
+            const lastRightTouch = touchControls.lastRightTouch || 0;
+            
+            if (lastLeftTouch > lastRightTouch) {
+                movingRight = false;
+            } else {
+                movingLeft = false;
+            }
+        } 
+        // For keyboard, use most recent key press
+        else {
+            const lastLeftPress = keys.lastLeftPress || 0;
+            const lastRightPress = keys.lastRightPress || 0;
+            
+            if (lastLeftPress > lastRightPress) {
+                movingRight = false;
+            } else {
+                movingLeft = false;
+            }
+        }
+    }
+    
+    // Apply movement
+    if (movingLeft) {
         player.velocityX = -MOVEMENT_SPEED * (1 + player.energy / 50);
         player.facingRight = false;
-    } else if (keys['ArrowRight'] || keys['d'] || touchControls.right) {
+        if (keys['ArrowLeft'] || keys['a']) {
+            keys.lastLeftPress = Date.now();
+        }
+    } else if (movingRight) {
         player.velocityX = MOVEMENT_SPEED * (1 + player.energy / 50);
         player.facingRight = true;
+        if (keys['ArrowRight'] || keys['d']) {
+            keys.lastRightPress = Date.now();
+        }
     } else {
         player.velocityX = 0;
     }
@@ -199,29 +252,34 @@ function updatePlayer() {
     // Apply gravity
     player.velocityY += GRAVITY;
     
-    // Update position
+    // Update position - move X and Y separately to allow sliding along walls
     player.x += player.velocityX;
-    player.y += player.velocityY;
     
-    // Boundary checks
+    // Boundary checks for X
     if (player.x < 0) player.x = 0;
     if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
     
-    // Collision detection with terrain
-    handleCollisions();
+    // Check horizontal collisions
+    handleHorizontalCollisions();
+    
+    // Now move Y
+    player.y += player.velocityY;
+    
+    // Check vertical collisions
+    handleVerticalCollisions();
     
     // Collect treasures
     collectTreasures();
 }
 
-// Handle player collision with terrain
-function handleCollisions() {
+// Handle horizontal collisions separately
+function handleHorizontalCollisions() {
     // Get player's tile position
     const tileX = Math.floor(player.x / TILE_SIZE);
     const tileY = Math.floor(player.y / TILE_SIZE);
     
     // Check tiles around player
-    for (let y = tileY - 1; y <= tileY + 2; y++) {
+    for (let y = tileY; y <= tileY + 1; y++) {
         for (let x = tileX - 1; x <= tileX + 2; x++) {
             // Skip if outside world bounds
             if (x < 0 || x >= worldWidth || y < 0 || y >= worldHeight) continue;
@@ -242,13 +300,48 @@ function handleCollisions() {
                 player.y + player.height > tileTop &&
                 player.y < tileBottom
             ) {
-                // Horizontal collision resolution
+                // Horizontal collision resolution based on movement direction
                 if (player.velocityX > 0) {
                     player.x = tileLeft - player.width;
                 } else if (player.velocityX < 0) {
                     player.x = tileRight;
                 }
                 
+                player.velocityX = 0;
+                break;
+            }
+        }
+    }
+}
+
+// Handle vertical collisions separately
+function handleVerticalCollisions() {
+    // Get player's tile position
+    const tileX = Math.floor(player.x / TILE_SIZE);
+    const tileY = Math.floor(player.y / TILE_SIZE);
+    
+    // Check tiles around player
+    for (let y = tileY - 1; y <= tileY + 2; y++) {
+        for (let x = tileX; x <= tileX + 1; x++) {
+            // Skip if outside world bounds
+            if (x < 0 || x >= worldWidth || y < 0 || y >= worldHeight) continue;
+            
+            // Skip empty tiles
+            if (world[y][x] === 0) continue;
+            
+            // Calculate tile boundaries
+            const tileLeft = x * TILE_SIZE;
+            const tileRight = tileLeft + TILE_SIZE;
+            const tileTop = y * TILE_SIZE;
+            const tileBottom = tileTop + TILE_SIZE;
+            
+            // Check collision
+            if (
+                player.x + player.width > tileLeft &&
+                player.x < tileRight &&
+                player.y + player.height > tileTop &&
+                player.y < tileBottom
+            ) {
                 // Vertical collision resolution
                 if (player.velocityY > 0) {
                     player.y = tileTop - player.height;
@@ -258,6 +351,8 @@ function handleCollisions() {
                     player.y = tileBottom;
                     player.velocityY = 0;
                 }
+                
+                break;
             }
         }
     }
@@ -371,9 +466,24 @@ function draw() {
 }
 
 // Game loop
-function gameLoop() {
-    updatePlayer();
-    draw();
+function gameLoop(timestamp) {
+    // Calculate time elapsed
+    if (!lastTimestamp) lastTimestamp = timestamp;
+    const elapsed = timestamp - lastTimestamp;
+    
+    // Only update at our target frame rate
+    if (elapsed > frameTime) {
+        // Update game state
+        updatePlayer();
+        
+        // Draw everything
+        draw();
+        
+        // Reset timestamp
+        lastTimestamp = timestamp;
+    }
+    
+    // Request next frame
     requestAnimationFrame(gameLoop);
 }
 
