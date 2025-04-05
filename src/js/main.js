@@ -3,7 +3,7 @@ import { createPlayer, updatePlayer, isPlayerHidden } from './player.js';
 import { generateWorld } from './world.js';
 import { initUI, updateEnergyDisplay, updateLevelDisplay, updateDiamondDisplay, 
          showLevelComplete, hideLevelComplete, updateCountdown, updatePauseButtonAppearance, 
-         handleResize } from './ui.js';
+         handleResize, showEntryScreen, setupEntryScreen } from './ui.js';
 import { initRenderer, draw, drawPauseOverlay } from './renderer.js';
 import { setupControls, keys, touchControls } from './controls.js';
 import { checkAchievements, resetAchievements } from './achievements.js';
@@ -25,14 +25,10 @@ let levelTransitionTimer = 0;
 let gamePaused = false;
 let lastTimestamp = 0;
 let warBackgroundElements;
+let gameStarted = false;
 
 // Initialize game
 function init() {
-    // Reset game state
-    currentLevel = 1;
-    totalDiamonds = 0;
-    gamePaused = false;
-    
     // Get canvas and context
     canvas = document.getElementById(DOM_IDS.CANVAS);
     ctx = canvas.getContext('2d');
@@ -40,11 +36,30 @@ function init() {
     // Initialize UI
     initUI();
     
-    // Reset achievements
-    resetAchievements();
-    
     // Initialize renderer
     initRenderer(ctx, canvas);
+    
+    // Set up the entry screen
+    setupEntryScreen(startGame);
+    
+    // Show the entry screen
+    showEntryScreen();
+    
+    // Handle window resize
+    window.addEventListener('resize', () => handleResize(canvas));
+    handleResize(canvas);
+}
+
+// Start the game after the entry screen
+function startGame() {
+    // Reset game state
+    currentLevel = 1;
+    totalDiamonds = 0;
+    gamePaused = false;
+    gameStarted = true;
+    
+    // Reset achievements
+    resetAchievements();
     
     // Compute world dimensions
     worldWidth = Math.ceil(canvas.width / TILE_SIZE);
@@ -69,10 +84,6 @@ function init() {
     // Set up controls
     setupControls(togglePause);
     
-    // Handle window resize
-    window.addEventListener('resize', () => handleResize(canvas));
-    handleResize(canvas);
-    
     // Make gamePaused globally available for animation pausing
     window.gamePaused = gamePaused;
     
@@ -83,14 +94,18 @@ function init() {
     updatePauseButtonAppearance(gamePaused);
     
     // Start game loop
+    lastTimestamp = 0;
     requestAnimationFrame(gameLoop);
 }
 
 // Toggle pause state
 function togglePause() {
-    gamePaused = !gamePaused;
-    window.gamePaused = gamePaused;
-    updatePauseButtonAppearance(gamePaused);
+    // Only allow pausing if the game has started
+    if (gameStarted) {
+        gamePaused = !gamePaused;
+        window.gamePaused = gamePaused;
+        updatePauseButtonAppearance(gamePaused);
+    }
 }
 
 // Complete the current level with success
@@ -173,8 +188,8 @@ function gameLoop(timestamp) {
     
     // Only update at our target frame rate
     if (elapsed > FRAME_TIME) {
-        // Skip physics updates if game is paused, but still draw
-        if (!gamePaused) {
+        // Skip physics updates if game is paused or not started
+        if (!gamePaused && gameStarted) {
             // Update missiles and war background elements
             warBackgroundElements = updateMissiles(
                 warBackgroundElements, 
@@ -214,25 +229,27 @@ function gameLoop(timestamp) {
             }
         }
         
-        // Draw everything
-        draw(
-            world, 
-            worldWidth, 
-            worldHeight, 
-            player, 
-            treasures, 
-            warBackgroundElements, 
-            levelComplete, 
-            warBackgroundElements.playerHit, 
-            warBackgroundElements.hitTime, 
-            warBackgroundElements.incomingMissile, 
-            warBackgroundElements.missileWarning,
-            gamePaused
-        );
-        
-        // Draw pause overlay if paused
-        if (gamePaused) {
-            drawPauseOverlay();
+        // Draw everything if game has started
+        if (gameStarted) {
+            draw(
+                world, 
+                worldWidth, 
+                worldHeight, 
+                player, 
+                treasures, 
+                warBackgroundElements, 
+                levelComplete, 
+                warBackgroundElements.playerHit, 
+                warBackgroundElements.hitTime, 
+                warBackgroundElements.incomingMissile, 
+                warBackgroundElements.missileWarning,
+                gamePaused
+            );
+            
+            // Draw pause overlay if paused
+            if (gamePaused) {
+                drawPauseOverlay();
+            }
         }
         
         // Reset timestamp

@@ -243,12 +243,52 @@
                 display: block;
             }
         }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
     <div id="game-wrapper">
         <div id="title-bar">
             <h1 class="game-title">TWO FREE</h1>
+        </div>
+        
+        <!-- Entry screen overlay -->
+        <div id="entry-screen" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 20, 40, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; text-align: center; padding: 20px; overflow: hidden;">
+            <!-- Background animation -->
+            <div style="position: absolute; width: 100%; height: 100%; overflow: hidden; opacity: 0.2; z-index: -1;">
+                <div id="bg-stars" style="position: absolute; top: 0; left: 0; width: 200%; height: 200%;"></div>
+            </div>
+            
+            <h1 style="color: #66CCFF; text-shadow: 0 0 20px rgba(102, 204, 255, 0.7); font-size: 48px; margin-bottom: 20px;">TWO FREE</h1>
+            
+            <div style="background: rgba(0, 10, 20, 0.8); padding: 20px; border-radius: 15px; max-width: 80%; margin: 0 auto; border: 2px solid #66CCFF; box-shadow: 0 0 30px rgba(102, 204, 255, 0.3);">
+                <p style="color: #fff; margin-bottom: 20px; line-height: 1.5;">In a world torn apart by war, you are one of the two remaining free robots. Your mission is to collect precious energy diamonds deep underground while avoiding deadly missile strikes from above.</p>
+                
+                <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+                    <div style="text-align: center;">
+                        <div style="color: #fff; margin-bottom: 10px;">Movement</div>
+                        <div style="display: flex; gap: 5px;">
+                            <div style="background: rgba(102, 204, 255, 0.3); border: 1px solid #66CCFF; padding: 5px 12px; border-radius: 4px;">↑</div>
+                            <div style="background: rgba(102, 204, 255, 0.3); border: 1px solid #66CCFF; padding: 5px 12px; border-radius: 4px;">←</div>
+                            <div style="background: rgba(102, 204, 255, 0.3); border: 1px solid #66CCFF; padding: 5px 12px; border-radius: 4px;">↓</div>
+                            <div style="background: rgba(102, 204, 255, 0.3); border: 1px solid #66CCFF; padding: 5px 12px; border-radius: 4px;">→</div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <div style="color: #fff; margin-bottom: 10px;">Dig (Down Arrow)</div>
+                        <div style="background: rgba(102, 204, 255, 0.3); border: 1px solid #66CCFF; padding: 5px 12px; border-radius: 4px;">↓</div>
+                    </div>
+                </div>
+                
+                <p style="color: #fff; margin: 20px 0; line-height: 1.5;">Hide underground to escape missile attacks. Collect all diamonds to advance to the next level.</p>
+            </div>
+            
+            <button id="start-game-btn" style="margin-top: 30px; background: rgba(102, 204, 255, 0.3); color: white; border: 2px solid #66CCFF; padding: 15px 40px; font-size: 24px; border-radius: 50px; cursor: pointer; font-family: 'Orbitron', sans-serif; box-shadow: 0 0 20px rgba(102, 204, 255, 0.5); transition: all 0.3s ease;">START MISSION</button>
         </div>
         
         <div id="game-container">
@@ -297,5 +337,34 @@
     </div>
     <!-- Load the main script using Vite's entry point -->
     <script type="module" src="/src/js/main.js"></script>
+    
+    <script>
+        // Create animated stars in the background
+        document.addEventListener('DOMContentLoaded', function() {
+            const bgStars = document.getElementById('bg-stars');
+            
+            // Create 100 stars
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                const size = Math.random() * 3 + 1;
+                const opacity = Math.random() * 0.7 + 0.3;
+                
+                star.style.position = 'absolute';
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.backgroundColor = 'white';
+                star.style.borderRadius = '50%';
+                star.style.opacity = opacity;
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.boxShadow = '0 0 ' + (size*2) + 'px rgba(255, 255, 255, 0.8)';
+                
+                // Add subtle animation
+                star.style.animation = 'twinkle ' + (Math.random() * 3 + 2) + 's infinite alternate';
+                
+                bgStars.appendChild(star);
+            }
+        });
+    </script>
 </body>
 </html> 

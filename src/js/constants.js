@@ -32,5 +32,7 @@ export const DOM_IDS = {
     RIGHT_BTN: 'rightBtn',
     JUMP_BTN: 'jumpBtn',
     DIG_BTN: 'digBtn',
-    PAUSE_BTN: 'pauseBtn'
+    PAUSE_BTN: 'pauseBtn',
+    ENTRY_SCREEN: 'entry-screen',
+    START_GAME_BTN: 'start-game-btn'
 }; 

@@ -10,6 +10,8 @@ let totalDiamondsSpan;
 let countdownSpan;
 let achievementsDiv;
 let pauseBtn;
+let entryScreen;
+let startGameBtn;
 
 // Initialize UI elements
 export function initUI() {
@@ -23,11 +25,77 @@ export function initUI() {
     countdownSpan = document.getElementById(DOM_IDS.COUNTDOWN);
     achievementsDiv = document.getElementById(DOM_IDS.ACHIEVEMENTS);
     pauseBtn = document.getElementById(DOM_IDS.PAUSE_BTN);
+    entryScreen = document.getElementById(DOM_IDS.ENTRY_SCREEN);
+    startGameBtn = document.getElementById(DOM_IDS.START_GAME_BTN);
     
     // Initial update
     updateLevelDisplay(1);
     updateEnergyDisplay(10);
     updateDiamondDisplay(0);
+    
+    // Initially hide the pause button until game starts
+    if (pauseBtn) {
+        pauseBtn.style.display = 'none';
+    }
+}
+
+// Show entry screen
+export function showEntryScreen() {
+    if (entryScreen) {
+        entryScreen.style.display = 'flex';
+    }
+}
+
+// Hide entry screen with transition
+export function hideEntryScreen() {
+    if (entryScreen) {
+        // Add fade out transition
+        entryScreen.style.opacity = '0';
+        entryScreen.style.transition = 'opacity 0.8s ease';
+        
+        // Remove from DOM after transition
+        setTimeout(() => {
+            entryScreen.style.display = 'none';
+            
+            // Show the pause button after game starts
+            if (pauseBtn) {
+                pauseBtn.style.display = 'flex';
+            }
+        }, 800);
+    }
+}
+
+// Set up entry screen event handlers
+export function setupEntryScreen(startGameCallback) {
+    if (startGameBtn) {
+        // Add hover effect
+        startGameBtn.addEventListener('mouseover', () => {
+            startGameBtn.style.backgroundColor = 'rgba(102, 204, 255, 0.5)';
+            startGameBtn.style.transform = 'scale(1.05)';
+        });
+        
+        startGameBtn.addEventListener('mouseout', () => {
+            startGameBtn.style.backgroundColor = 'rgba(102, 204, 255, 0.3)';
+            startGameBtn.style.transform = 'scale(1)';
+        });
+        
+        // Add click effect
+        startGameBtn.addEventListener('mousedown', () => {
+            startGameBtn.style.transform = 'scale(0.95)';
+        });
+        
+        startGameBtn.addEventListener('mouseup', () => {
+            startGameBtn.style.transform = 'scale(1.05)';
+        });
+        
+        // Start game when button is clicked
+        startGameBtn.addEventListener('click', () => {
+            hideEntryScreen();
+            
+            // Add a slight delay before starting the game
+            setTimeout(startGameCallback, 400);
+        });
+    }
 }
 
 // Update energy display
