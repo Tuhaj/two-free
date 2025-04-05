@@ -89,11 +89,36 @@
             max-height: 80vh;
         }
         
+        /* Fix canvas size for mobile */
+        @media (max-width: 800px) or (pointer: coarse) {
+            canvas {
+                max-height: 65vh; /* Allow more space for controls */
+            }
+        }
+        
         #game-container {
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
+        }
+        
+        /* Add space for controls below canvas */
+        @media (max-width: 800px) or (pointer: coarse) {
+            #game-container {
+                padding-bottom: 120px; /* Space for controls - reduced from 180px */
+            }
+            
+            /* Adjust for portrait mode */
+            @media (orientation: portrait) {
+                canvas {
+                    max-height: 60vh;
+                }
+                
+                #game-container {
+                    padding-bottom: 150px;
+                }
+            }
         }
         
         #title-bar {
@@ -240,13 +265,269 @@
         
         @media (max-width: 800px) or (pointer: coarse) {
             #touch-controls {
-                display: block;
+                position: fixed;
+                bottom: 10px;
+                left: 0;
+                right: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px 20px 20px 20px;
+                z-index: 1000;
+                background: rgba(0, 10, 20, 0.8);
+                border-top: 2px solid rgba(102, 204, 255, 0.5);
+                box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
+            }
+            
+            .control-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0;
+                width: 100%;
+                max-width: 500px;
+                margin: 0 auto;
+            }
+            
+            .control-row:first-child {
+                justify-content: center;
+                margin-bottom: 5px;
+            }
+            
+            .control-btn {
+                width: 70px;
+                height: 70px;
+                font-size: 30px;
+                background: rgba(102, 204, 255, 0.5);
+                border: 3px solid #66CCFF;
+                box-shadow: 0 0 15px rgba(102, 204, 255, 0.7);
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                -webkit-tap-highlight-color: transparent;
+                user-select: none;
+                touch-action: manipulation;
+            }
+            
+            .control-btn::after {
+                content: '';
+                position: absolute;
+                top: -10px;
+                left: -10px;
+                right: -10px;
+                bottom: -10px;
+                z-index: -1;
+            }
+            
+            .btn-icon {
+                font-size: 34px;
+                line-height: 1;
+                font-weight: bold;
+                text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+            }
+            
+            .btn-label {
+                font-size: 13px;
+                margin-top: 4px;
+                font-weight: bold;
+                text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+                letter-spacing: 0.5px;
+            }
+            
+            .control-btn:active {
+                background: rgba(102, 204, 255, 0.8);
+                transform: scale(0.95);
+                box-shadow: 0 0 25px rgba(102, 204, 255, 0.9);
+            }
+            
+            .control-btn.large {
+                width: 90px;
+                height: 90px;
+            }
+            
+            .control-btn.dig-btn {
+                background: rgba(255, 160, 0, 0.5);
+                border-color: #FFA000;
+            }
+            
+            .control-btn.dig-btn:active {
+                background: rgba(255, 160, 0, 0.8);
+                box-shadow: 0 0 25px rgba(255, 160, 0, 0.9);
+            }
+            
+            #leftBtn, #rightBtn, #leftBtn-alt, #rightBtn-alt, #leftBtn-left, #rightBtn-left {
+                position: relative;
+            }
+            
+            #leftBtn::before, #rightBtn::before, 
+            #leftBtn-alt::before, #rightBtn-alt::before,
+            #leftBtn-left::before, #rightBtn-left::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 10, 20, 0.4);
+                border-radius: 50%;
+                z-index: -1;
+            }
+            
+            #tablet-layout {
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+                max-width: 500px;
+                margin: 0 auto;
+            }
+            
+            .tablet-controls-left, .tablet-controls-right {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                width: 40%;
+            }
+            
+            @media (prefers-contrast: more) {
+                .control-btn {
+                    background: rgba(102, 204, 255, 0.9);
+                    border-width: 4px;
+                }
+                
+                .control-btn.dig-btn {
+                    background: rgba(255, 160, 0, 0.9);
+                }
+                
+                .btn-label, .btn-icon {
+                    text-shadow: 0 0 8px black;
+                }
+            }
+            
+            @media (orientation: portrait) {
+                #touch-controls {
+                    bottom: 40px;
+                }
+                
+                .control-btn {
+                    width: 80px;
+                    height: 80px;
+                }
+                
+                .control-btn.large {
+                    width: 100px;
+                    height: 100px;
+                }
+                
+                .btn-icon {
+                    font-size: 36px;
+                }
+                
+                .btn-label {
+                    font-size: 14px;
+                    margin-top: 5px;
+                }
+            }
+            
+            @media (max-width: 400px) {
+                .control-btn {
+                    width: 65px;
+                    height: 65px;
+                }
+                
+                .control-btn.large {
+                    width: 80px;
+                    height: 80px;
+                }
+                
+                .btn-icon {
+                    font-size: 30px;
+                }
+            }
+            
+            /* Improved pause button for mobile */
+            #pauseBtn {
+                width: 60px;
+                height: 60px;
+                font-size: 28px;
+                top: 20px;
+                right: 20px;
+                background: rgba(102, 204, 255, 0.5);
+                border: 3px solid #66CCFF;
+                box-shadow: 0 0 20px rgba(102, 204, 255, 0.6);
+            }
+            
+            #pauseBtn:active {
+                transform: scale(0.95);
+                background: rgba(102, 204, 255, 0.7);
             }
         }
         
         @keyframes twinkle {
             0% { opacity: 0.3; }
             100% { opacity: 1; }
+        }
+        
+        /* Add better centering for tablet */
+        @media (min-width: 600px) and (max-width: 1024px) {
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                padding: 0;
+                margin: 0;
+            }
+            
+            #game-wrapper {
+                max-width: 90%;
+                margin: 0 auto;
+            }
+            
+            canvas {
+                max-height: 70vh;
+                margin: 0 auto;
+            }
+            
+            #game-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding-bottom: 120px; /* Space for controls */
+            }
+            
+            #touch-controls {
+                width: 100%;
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            
+            /* Improve tablet layout spacing */
+            #tablet-layout {
+                padding: 0 10%;
+            }
+            
+            .control-btn {
+                width: 85px;
+                height: 85px;
+            }
+            
+            .control-btn.large {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .btn-icon {
+                font-size: 36px;
+            }
+            
+            .btn-label {
+                font-size: 16px;
+                margin-top: 5px;
+            }
         }
     </style>
 </head>
@@ -317,20 +598,93 @@
                 <p>Next level starting in <span id="countdown" class="highlight">3</span>...</p>
             </div>
             
+            <!-- Game Over screen -->
+            <div id="game-over" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(139, 0, 0, 0.9); color: white; padding: 30px; border-radius: 15px; text-align: center; display: none; z-index: 1000; width: 80%; max-width: 400px; box-shadow: 0 0 30px rgba(255, 0, 0, 0.7); border: 2px solid #ff0000;">
+                <h2 style="color: #ff3333; text-shadow: 0 0 10px rgba(255, 0, 0, 0.7); margin-top: 0;">GAME OVER</h2>
+                <p>Your robot was destroyed by enemy forces!</p>
+                <p>Diamonds collected: <span id="finalDiamonds" class="highlight">0</span></p>
+                <p>Levels completed: <span id="levelsCompleted" class="highlight">0</span></p>
+                <button id="restart-game-btn" style="margin-top: 20px; background: rgba(255, 0, 0, 0.3); color: white; border: 2px solid #ff3333; padding: 15px 40px; font-size: 20px; border-radius: 50px; cursor: pointer; font-family: 'Orbitron', sans-serif; box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); transition: all 0.3s ease;">RESTART MISSION</button>
+            </div>
+            
             <!-- Achievement notification area -->
             <div id="achievements" style="position: absolute; top: 60px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 1000;"></div>
             
             <!-- Pause button that's always visible -->
-            <div id="pauseBtn" style="position: absolute; top: 15px; right: 15px; background: rgba(102, 204, 255, 0.3); border: 2px solid #66CCFF; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 20px; color: white; cursor: pointer; z-index: 100;">⏸️</div>
+            <div id="pauseBtn" role="button" aria-label="Pause game" tabindex="0" style="position: absolute; top: 15px; right: 15px; background: rgba(102, 204, 255, 0.4); border: 2px solid #66CCFF; border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 24px; color: white; cursor: pointer; z-index: 100; box-shadow: 0 0 15px rgba(102, 204, 255, 0.5); -webkit-tap-highlight-color: transparent;">⏸️</div>
             
-            <div id="touch-controls">
-                <div class="control-row">
-                    <div id="jumpBtn" class="control-btn large">↑</div>
+            <!-- Sound toggle button -->
+            <div id="soundBtn" role="button" aria-label="Toggle sound" tabindex="0" style="position: absolute; top: 15px; right: 75px; background: rgba(102, 204, 255, 0.4); border: 2px solid #66CCFF; border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 24px; color: white; cursor: pointer; z-index: 100; box-shadow: 0 0 15px rgba(102, 204, 255, 0.5); -webkit-tap-highlight-color: transparent;">🔊</div>
+            
+            <div id="touch-controls" role="group" aria-label="Game controls">
+                <!-- Standard layout (default) -->
+                <div id="standard-layout" role="group" aria-label="Standard control layout">
+                    <div class="control-row">
+                        <div id="jumpBtn" class="control-btn large" role="button" aria-label="Jump">
+                            <span class="btn-icon">↑</span>
+                            <span class="btn-label">JUMP</span>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <div id="leftBtn" class="control-btn" role="button" aria-label="Move left">
+                            <span class="btn-icon">←</span>
+                        </div>
+                        <div id="rightBtn" class="control-btn" role="button" aria-label="Move right">
+                            <span class="btn-icon">→</span>
+                        </div>
+                        <div id="digBtn" class="control-btn dig-btn" role="button" aria-label="Dig">
+                            <span class="btn-icon">↓</span>
+                            <span class="btn-label">DIG</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="control-row">
-                    <div id="leftBtn" class="control-btn">←</div>
-                    <div id="rightBtn" class="control-btn">→</div>
-                    <div id="digBtn" class="control-btn">↓</div>
+                
+                <!-- Tablet layout (hidden by default) -->
+                <div id="tablet-layout" role="group" aria-label="Tablet control layout" style="display: none;">
+                    <div class="tablet-controls-left">
+                        <div id="jumpBtn-alt" class="control-btn large" role="button" aria-label="Jump">
+                            <span class="btn-icon">↑</span>
+                            <span class="btn-label">JUMP</span>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <div id="leftBtn-alt" class="control-btn" role="button" aria-label="Move left">
+                                <span class="btn-icon">←</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tablet-controls-right">
+                        <div id="digBtn-alt" class="control-btn dig-btn large" role="button" aria-label="Dig">
+                            <span class="btn-icon">↓</span>
+                            <span class="btn-label">DIG</span>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <div id="rightBtn-alt" class="control-btn" role="button" aria-label="Move right">
+                                <span class="btn-icon">→</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Left-handed layout (hidden by default) -->
+                <div id="lefty-layout" role="group" aria-label="Left-handed control layout" style="display: none;">
+                    <div class="control-row">
+                        <div id="jumpBtn-left" class="control-btn large" role="button" aria-label="Jump">
+                            <span class="btn-icon">↑</span>
+                            <span class="btn-label">JUMP</span>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <div id="digBtn-left" class="control-btn dig-btn" role="button" aria-label="Dig">
+                            <span class="btn-icon">↓</span>
+                            <span class="btn-label">DIG</span>
+                        </div>
+                        <div id="leftBtn-left" class="control-btn" role="button" aria-label="Move left">
+                            <span class="btn-icon">←</span>
+                        </div>
+                        <div id="rightBtn-left" class="control-btn" role="button" aria-label="Move right">
+                            <span class="btn-icon">→</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -364,6 +718,104 @@
                 
                 bgStars.appendChild(star);
             }
+        });
+    </script>
+    
+    <script>
+        // Touch controls layout management
+        document.addEventListener('DOMContentLoaded', function() {
+            const standardLayout = document.getElementById('standard-layout');
+            const tabletLayout = document.getElementById('tablet-layout');
+            const leftyLayout = document.getElementById('lefty-layout');
+            
+            // Use localStorage to remember user's layout preference
+            let savedLayout = localStorage.getItem('controlLayout');
+            
+            // Set layout based on saved preference or device
+            function setLayout() {
+                // Check if it's a tablet (based on screen size)
+                const isTablet = window.innerWidth >= 600 && window.innerWidth <= 1024;
+                
+                // If device is tablet and no preference saved, set tablet layout as default
+                if (isTablet && !savedLayout) {
+                    savedLayout = 'tablet';
+                    localStorage.setItem('controlLayout', 'tablet');
+                }
+                
+                // If no preference set, default to standard
+                if (!savedLayout) {
+                    savedLayout = 'standard';
+                    localStorage.setItem('controlLayout', 'standard');
+                }
+                
+                // Apply the layout
+                standardLayout.style.display = 'none';
+                tabletLayout.style.display = 'none';
+                leftyLayout.style.display = 'none';
+                
+                if (savedLayout === 'standard') {
+                    standardLayout.style.display = 'block';
+                } else if (savedLayout === 'tablet') {
+                    tabletLayout.style.display = 'flex';
+                } else if (savedLayout === 'lefty') {
+                    leftyLayout.style.display = 'block';
+                }
+            }
+            
+            setLayout();
+            
+            // Switch layout on screen orientation change
+            window.addEventListener('resize', function() {
+                const isTablet = window.innerWidth >= 600 && window.innerWidth <= 1024;
+                
+                // Only change layout if there was no previously saved preference
+                if (isTablet && (!localStorage.getItem('controlLayout') || localStorage.getItem('controlLayout') === 'standard')) {
+                    localStorage.setItem('controlLayout', 'tablet');
+                    setLayout();
+                } else if (!isTablet && localStorage.getItem('controlLayout') === 'tablet') {
+                    localStorage.setItem('controlLayout', 'standard');
+                    setLayout();
+                }
+            });
+            
+            // Connect alternative layout buttons to the same functions as the standard buttons
+            function setupAltButtons() {
+                // Get all button references
+                const buttons = {
+                    jump: [document.getElementById('jumpBtn'), document.getElementById('jumpBtn-alt'), document.getElementById('jumpBtn-left')],
+                    left: [document.getElementById('leftBtn'), document.getElementById('leftBtn-alt'), document.getElementById('leftBtn-left')],
+                    right: [document.getElementById('rightBtn'), document.getElementById('rightBtn-alt'), document.getElementById('rightBtn-left')],
+                    dig: [document.getElementById('digBtn'), document.getElementById('digBtn-alt'), document.getElementById('digBtn-left')]
+                };
+                
+                // Function to dispatch an event to the original button
+                function mirrorTouch(originalBtn, eventType) {
+                    if (originalBtn) {
+                        const event = new Event(eventType);
+                        originalBtn.dispatchEvent(event);
+                    }
+                }
+                
+                // For each control type (jump, left, right, dig)
+                for (const [action, btns] of Object.entries(buttons)) {
+                    const primaryBtn = btns[0];
+                    
+                    // Skip if primary button not found
+                    if (!primaryBtn) continue;
+                    
+                    // Set up alternative buttons to mirror primary button events
+                    for (let i = 1; i < btns.length; i++) {
+                        if (btns[i]) {
+                            ['touchstart', 'touchend', 'mousedown', 'mouseup', 'mouseleave'].forEach(eventType => {
+                                btns[i].addEventListener(eventType, () => mirrorTouch(primaryBtn, eventType));
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Set up the alternative buttons after a short delay to ensure DOM is fully loaded
+            setTimeout(setupAltButtons, 500);
         });
     </script>
 </body>

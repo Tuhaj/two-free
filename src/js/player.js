@@ -1,8 +1,9 @@
 import { GRAVITY, JUMP_FORCE, MOVEMENT_SPEED, TILE_SIZE } from './constants.js';
 import { isColliding, getTileAtPosition } from './world.js';
 import { createDigEffect } from './renderer.js';
-import { createCollectEffect } from './effects.js';
+import { createCollectEffect, createEnemyHitEffect } from './effects.js';
 import { updateEnergyDisplay, updateDiamondDisplay } from './ui.js';
+import { playSound } from './audio.js';
 
 // Create the player object with default state
 export const createPlayer = () => ({
@@ -12,10 +13,13 @@ export const createPlayer = () => ({
     height: TILE_SIZE * 1.5,
     velocityX: 0,
     velocityY: 0,
-    energy: 10,
+    energy: 30,
     isJumping: false,
     isDigging: false,
-    facingRight: true
+    facingRight: true,
+    isDead: false,
+    deathTime: 0,
+    deathAnimationComplete: false
 });
 
 // Initialize player at a specific position
@@ -28,7 +32,7 @@ export const initPlayer = (player, x, y) => {
 };
 
 // Update player state based on input and physics
-export function updatePlayer(player, world, worldWidth, worldHeight, keys, touchControls, treasures, gamePaused, totalDiamonds = 0) {
+export function updatePlayer(player, world, worldWidth, worldHeight, keys, touchControls, treasures, gamePaused, totalDiamonds = 0, enemies = []) {
     if (gamePaused) return { allCollected: false, totalDiamonds };
     
     // Handle horizontal movement - make sure only one direction is active at a time
@@ -82,12 +86,15 @@ export function updatePlayer(player, world, worldWidth, worldHeight, keys, touch
     if ((keys['ArrowUp'] || keys['w'] || keys[' '] || touchControls.jump) && !player.isJumping) {
         player.velocityY = JUMP_FORCE;
         player.isJumping = true;
+        
+        // Play jump sound
+        playSound('jump');
     }
     
     // Handle digging
     player.isDigging = keys['ArrowDown'] || keys['s'] || touchControls.dig;
     if (player.isDigging && player.energy > 0) {
-        dig(player, world, worldWidth, worldHeight);
+        dig(player, world, worldWidth, worldHeight, enemies);
     }
     
     // Apply gravity
@@ -264,8 +271,8 @@ function collectTreasures(player, treasures, totalDiamonds = 0) {
                 // Collect treasure
                 treasure.collected = true;
                 
-                // Increase energy and diamonds
-                player.energy += treasure.value;
+                // Increase energy and diamonds (reduced energy gain)
+                player.energy += treasure.value * 0.7; // Only get 70% of the treasure value as energy
                 totalDiamonds += treasure.value;
                 
                 // Update displays
@@ -274,6 +281,10 @@ function collectTreasures(player, treasures, totalDiamonds = 0) {
                 
                 // Create collection effect
                 createCollectEffect(treasure.x + TILE_SIZE/2, treasure.y + TILE_SIZE/2, treasure.value);
+                
+                // Play collect sound with pitch based on value
+                const pitch = 0.8 + (treasure.value / 25) * 0.4; // Higher pitch for more valuable treasures
+                playSound('collectTreasure', 0.7, pitch);
             }
         }
     }
@@ -282,11 +293,14 @@ function collectTreasures(player, treasures, totalDiamonds = 0) {
 }
 
 // Dig through terrain
-export function dig(player, world, worldWidth, worldHeight) {
+export function dig(player, world, worldWidth, worldHeight, enemies = []) {
     if (player.isDigging && player.energy > 0) {
         // Calculate dig position based on player facing direction
         const digX = Math.floor((player.x + (player.facingRight ? player.width : 0)) / TILE_SIZE);
         const digY = Math.floor((player.y + player.height) / TILE_SIZE);
+        
+        // First check if there's a treasure at dig location
+        let treasureFound = false;
         
         // Check if valid dig location
         if (
@@ -300,9 +314,55 @@ export function dig(player, world, worldWidth, worldHeight) {
             // Create digging effect at the center of the tile
             createDigEffect(digX * TILE_SIZE + TILE_SIZE/2, digY * TILE_SIZE + TILE_SIZE/2);
             
-            // Decrease energy
-            player.energy -= 0.1;
-            updateEnergyDisplay(player.energy);
+            // Play digging sound with slight pitch variation
+            playSound('dig', 0.6, 0.9 + Math.random() * 0.2);
+            
+            // Decrease energy only if no treasure was found
+            if (!treasureFound) {
+                player.energy -= 0.3;
+            }
+            
+            // Check if digging attack hits any enemies
+            attackEnemiesWithDigging(player, enemies, digX, digY);
+        }
+    }
+}
+
+// Attack enemies with digging
+function attackEnemiesWithDigging(player, enemies, digX, digY) {
+    // Only attack if we have enemies array
+    if (!enemies || !enemies.length) return;
+    
+    // Calculate digging attack area
+    const attackX = digX * TILE_SIZE;
+    const attackY = digY * TILE_SIZE;
+    const attackRange = TILE_SIZE * 1.5; // Slightly larger than a tile
+    
+    // Check each enemy
+    for (const enemy of enemies) {
+        // Calculate enemy center position
+        const enemyCenterX = enemy.x + enemy.width / 2;
+        const enemyCenterY = enemy.y + enemy.height / 2;
+        
+        // Calculate distance to attack point
+        const dx = enemyCenterX - (attackX + TILE_SIZE / 2);
+        const dy = enemyCenterY - (attackY + TILE_SIZE / 2);
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // If enemy is close enough to the digging point, damage it
+        if (distance < attackRange) {
+            // Deal damage per dig hit (adjusted for new enemy health of 40)
+            enemy.health -= 13; // Was 10 for 30 health, now 13 for 40 health - still requires about 3 hits
+            
+            // Add knockback effect
+            const knockDirection = dx < 0 ? -1 : 1;
+            enemy.velocityX = knockDirection * 5;
+            
+            // Create hit effect
+            createEnemyHitEffect(enemyCenterX, enemyCenterY);
+            
+            // Play sound effect
+            playSound('enemyHit');
         }
     }
 }

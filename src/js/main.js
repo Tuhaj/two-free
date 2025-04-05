@@ -3,12 +3,14 @@ import { createPlayer, updatePlayer, isPlayerHidden } from './player.js';
 import { generateWorld } from './world.js';
 import { initUI, updateEnergyDisplay, updateLevelDisplay, updateDiamondDisplay, 
          showLevelComplete, hideLevelComplete, updateCountdown, updatePauseButtonAppearance, 
-         handleResize, showEntryScreen, setupEntryScreen } from './ui.js';
+         handleResize, showEntryScreen, setupEntryScreen, showGameOver } from './ui.js';
 import { initRenderer, draw, drawPauseOverlay } from './renderer.js';
 import { setupControls, keys, touchControls } from './controls.js';
 import { checkAchievements, resetAchievements } from './achievements.js';
 import { initMissileSystem, updateMissiles } from './missiles.js';
 import { createInitialWarBackground } from './effects.js';
+import { spawnEnemies, updateEnemies, checkCollisions, resetEnemies, getEnemies } from './enemies.js';
+import audioManager, { playSound, toggleMute, setupAudio } from './audio.js';
 
 // Game state
 let canvas;
@@ -25,6 +27,7 @@ let levelTransitionTimer = 0;
 let gamePaused = false;
 let lastTimestamp = 0;
 let warBackgroundElements;
+let enemies = [];
 let gameStarted = false;
 
 // Initialize game
@@ -80,6 +83,9 @@ function startGame() {
     
     // Create initial background war elements
     createInitialWarBackground(canvas, warBackgroundElements);
+    
+    // Reset enemies
+    enemies = resetEnemies();
     
     // Set up controls
     setupControls(togglePause);
@@ -176,6 +182,9 @@ function startNextLevel() {
     // Reset level state
     levelComplete = false;
     
+    // Reset enemies for new level
+    enemies = resetEnemies();
+    
     // Hide level complete overlay
     hideLevelComplete();
 }
@@ -188,7 +197,7 @@ function gameLoop(timestamp) {
     
     // Only update at our target frame rate
     if (elapsed > FRAME_TIME) {
-        // Skip physics updates if game is paused or not started
+        // Skip physics updates if game is paused, but still draw
         if (!gamePaused && gameStarted) {
             // Update missiles and war background elements
             warBackgroundElements = updateMissiles(
@@ -204,10 +213,55 @@ function gameLoop(timestamp) {
             // Check if player is hidden
             player.isHidden = isPlayerHidden(player, world);
             
-            // Only update player if level is not complete and not hit by missile
-            if (!levelComplete && !(warBackgroundElements.playerHit && Date.now() - warBackgroundElements.hitTime < 500)) {
+            // Spawn and update enemies
+            if (!levelComplete && !player.isDead) {
+                // Spawn new enemies based on level
+                enemies = spawnEnemies(world, worldWidth, worldHeight, currentLevel);
+                
+                // Update existing enemies
+                enemies = updateEnemies(enemies, player, world, worldWidth, worldHeight, player.isHidden);
+                
+                // Check for enemy-player collisions
+                checkCollisions(player, enemies);
+                
+                // Check if player is dead
+                if (player.energy <= 0 && !player.isDead) {
+                    // Trigger death sequence
+                    player.isDead = true;
+                    player.deathTime = Date.now();
+                    player.energy = 0; // Prevent negative energy
+                    updateEnergyDisplay(player.energy);
+                }
+            }
+            
+            // Handle player death animation completion
+            if (player.isDead && player.deathAnimationComplete) {
+                // Show game over screen
+                showGameOver(totalDiamonds, currentLevel);
+                
+                // Play game over sound
+                playSound('gameOver', 0.8);
+                
+                // Set flag to prevent playing the sound multiple times
+                player.deathAnimationComplete = false;
+                // We don't pause the game because we want background animations to continue
+            }
+            
+            // Only update player if level is not complete, not hit by missile, and not dead
+            if (!levelComplete && !player.isDead && !(warBackgroundElements.playerHit && Date.now() - warBackgroundElements.hitTime < 500)) {
                 // Update player state
-                const updateResult = updatePlayer(player, world, worldWidth, worldHeight, keys, touchControls, treasures, gamePaused, totalDiamonds);
+                const updateResult = updatePlayer(
+                    player, 
+                    world, 
+                    worldWidth, 
+                    worldHeight, 
+                    keys, 
+                    touchControls, 
+                    treasures, 
+                    gamePaused, 
+                    totalDiamonds,
+                    enemies
+                );
                 
                 // Update total diamonds if changed
                 if (updateResult.totalDiamonds !== totalDiamonds) {
@@ -243,7 +297,8 @@ function gameLoop(timestamp) {
                 warBackgroundElements.hitTime, 
                 warBackgroundElements.incomingMissile, 
                 warBackgroundElements.missileWarning,
-                gamePaused
+                gamePaused,
+                enemies
             );
             
             // Draw pause overlay if paused
@@ -271,4 +326,41 @@ window.gameState = {
     currentLevel,
     totalDiamonds,
     warBackgroundElements
-}; 
+};
+
+// Make startGame available globally
+window.startGame = startGame;
+
+// Initialize everything
+window.onload = function() {
+    // Init canvas and context
+    canvas = document.getElementById('gameCanvas');
+    ctx = canvas.getContext('2d');
+    
+    // Init renderer with canvas context
+    initRenderer(ctx, canvas);
+    
+    // Setup audio system
+    setupAudio();
+    setupSoundButton();
+    
+    // Set up entry screen listeners
+    setupEntryScreen(() => {
+        // Show entry screen
+        showEntryScreen();
+    }, startGame);
+    
+    // Handle window resize
+    window.addEventListener('resize', () => handleResize(canvas));
+    handleResize(canvas);
+};
+
+// Set up sound toggle button
+function setupSoundButton() {
+    const soundBtn = document.getElementById('soundBtn');
+    
+    soundBtn.addEventListener('click', function() {
+        const isMuted = toggleMute();
+        soundBtn.innerHTML = isMuted ? '🔇' : '🔊';
+    });
+} 

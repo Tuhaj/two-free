@@ -1,4 +1,4 @@
-import { createTextParticle } from './renderer.js';
+import { createTextParticle, createParticle } from './renderer.js';
 
 // Create treasure collection effect
 export function createCollectEffect(x, y, value) {
@@ -100,5 +100,40 @@ export function createInitialWarBackground(canvas, warBackgroundElements) {
     // Create initial missiles
     for (let i = 0; i < 3; i++) {
         createDistantMissile(canvas, warBackgroundElements);
+    }
+}
+
+// Create an enemy hit effect
+export function createEnemyHitEffect(x, y) {
+    // Create a burst of red particles
+    for (let i = 0; i < 8; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1 + Math.random() * 3;
+        
+        createParticle(
+            x,
+            y,
+            Math.cos(angle) * speed,
+            Math.sin(angle) * speed,
+            3 + Math.random() * 4,
+            `hsl(${0 + Math.random() * 30}, 100%, ${50 + Math.random() * 30}%)`,
+            20 + Math.random() * 20
+        );
+    }
+    
+    // Add some sparks
+    for (let i = 0; i < 5; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2 + Math.random() * 4;
+        
+        createParticle(
+            x,
+            y,
+            Math.cos(angle) * speed,
+            Math.sin(angle) * speed,
+            1 + Math.random() * 2,
+            `rgb(255, ${150 + Math.random() * 105}, ${Math.random() * 50})`,
+            10 + Math.random() * 10
+        );
     }
 } 

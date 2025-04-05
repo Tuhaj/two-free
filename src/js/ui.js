@@ -286,4 +286,47 @@ export function handleResize(canvas) {
         canvas.style.width = `${canvas.width}px`;
         canvas.style.height = `${canvas.height}px`;
     }
+}
+
+// Show game over screen
+export function showGameOver(totalDiamonds, currentLevel) {
+    const gameOverElement = document.getElementById('game-over');
+    const finalDiamondsElement = document.getElementById('finalDiamonds');
+    const levelsCompletedElement = document.getElementById('levelsCompleted');
+    
+    // Update stats
+    finalDiamondsElement.textContent = totalDiamonds;
+    levelsCompletedElement.textContent = currentLevel - 1;
+    
+    // Show the game over screen with fade-in effect
+    gameOverElement.style.display = 'block';
+    gameOverElement.style.opacity = 0;
+    
+    // Fade in
+    let opacity = 0;
+    const fadeIn = setInterval(() => {
+        opacity += 0.05;
+        gameOverElement.style.opacity = opacity;
+        
+        if (opacity >= 1) {
+            clearInterval(fadeIn);
+        }
+    }, 30);
+    
+    // Add event listener for restart button
+    const restartBtn = document.getElementById('restart-game-btn');
+    restartBtn.addEventListener('click', restartGame);
+}
+
+// Hide game over screen
+export function hideGameOver() {
+    const gameOverElement = document.getElementById('game-over');
+    gameOverElement.style.display = 'none';
+}
+
+// Restart game from game over
+function restartGame() {
+    hideGameOver();
+    // Call the startGame function from main.js
+    window.startGame();
 } 

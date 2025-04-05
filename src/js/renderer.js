@@ -16,42 +16,96 @@ export function initRenderer(canvasContext, canvasElement) {
 }
 
 // Main draw function
-export function draw(world, worldWidth, worldHeight, player, treasures, warBackgroundElements, 
-                    levelComplete, playerHit, hitTime, incomingMissile, missileWarning, gamePaused) {
-    // Draw background 
-    drawBackground();
+export function draw(
+    world, 
+    worldWidth, 
+    worldHeight, 
+    player, 
+    treasures, 
+    warBackgroundElements, 
+    levelComplete, 
+    playerHit, 
+    hitTime,
+    incomingMissile, 
+    missileWarning,
+    gamePaused,
+    enemies = []
+) {
+    // Draw background with gradient sky
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    skyGradient.addColorStop(0, '#1e3a5a'); // Darker blue for war sky
+    skyGradient.addColorStop(1, '#576b84'); // Grayish blue at bottom
+    ctx.fillStyle = skyGradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Draw war background
+    // Draw distant mountains
+    drawMountains();
+    
+    // Draw war background elements (explosions, missiles, smoke)
     drawWarBackground(warBackgroundElements);
     
-    // Draw world tiles
-    drawWorld(world, worldWidth, worldHeight);
-    
-    // Draw treasures
-    drawTreasures(treasures);
-    
-    // Draw effects
-    if (digEffect) {
-        drawDigEffect(gamePaused);
+    // Draw world
+    for (let y = 0; y < worldHeight; y++) {
+        for (let x = 0; x < worldWidth; x++) {
+            if (world[y][x] === 0) continue; // Skip air
+            
+            const tileX = x * TILE_SIZE;
+            const tileY = y * TILE_SIZE;
+            
+            if (world[y][x] === 1) {
+                // Draw dirt with texture
+                drawDirtTile(tileX, tileY);
+            } else if (world[y][x] === 2) {
+                // Draw stone with texture
+                drawStoneTile(tileX, tileY);
+            }
+        }
     }
     
-    // Draw particles
-    updateAndDrawParticles(gamePaused);
+    // Draw treasures with different colors based on value
+    drawTreasures(treasures);
+    
+    // Draw digging effect if active
+    updateAndDrawEffects();
     
     // Draw missile warning or incoming missile
     drawMissileWarning(incomingMissile, missileWarning);
     
-    // Draw player
-    drawPlayer(player);
-    
-    // Draw player hit effect
-    if (playerHit) {
-        drawPlayerHitEffect(playerHit, hitTime);
+    // Draw enemies
+    for (const enemy of enemies) {
+        drawEnemy(enemy);
     }
     
-    // Draw level complete overlay
+    // Draw player as Wall-E inspired robot
+    drawRobot(player, playerHit);
+    
+    // Draw "hidden" indicator if player is hidden underground
+    if (player.isHidden) {
+        // Show a shield or safety indicator above the player
+        ctx.font = 'bold 12px Arial';
+        ctx.fillStyle = 'rgba(0, 255, 100, 0.8)';
+        ctx.textAlign = 'center';
+        ctx.fillText('⛨ HIDDEN', player.x + player.width / 2, player.y - 10);
+        
+        // Add a subtle shield effect around player
+        ctx.strokeStyle = 'rgba(0, 255, 100, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(player.x + player.width / 2, player.y + player.height / 2, 
+                player.width * 0.8, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    
+    // Draw player hit effect (red overlay, screen shake)
+    if (playerHit) {
+        drawPlayerHitEffect(hitTime);
+    }
+    
+    // Draw overlay when level is complete
     if (levelComplete) {
-        drawLevelCompleteOverlay();
+        // Draw slightly transparent overlay
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 }
 
@@ -507,35 +561,93 @@ function drawMissileWarning(incomingMissile, missileWarning) {
 }
 
 // Draw the player hit effect
-function drawPlayerHitEffect(playerHit, hitTime) {
-    if (playerHit) {
-        const elapsedTime = Date.now() - hitTime;
-        if (elapsedTime < 2000) {
-            // Shake the canvas
-            const shakeAmount = Math.max(0, 10 - elapsedTime / 200);
-            ctx.save();
-            ctx.translate(
-                (Math.random() - 0.5) * shakeAmount, 
-                (Math.random() - 0.5) * shakeAmount
-            );
-            
-            // Red overlay
-            const alpha = Math.max(0, 0.7 - elapsedTime / 2000);
-            ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.restore();
-        }
+function drawPlayerHitEffect(hitTime) {
+    const elapsedTime = Date.now() - hitTime;
+    if (elapsedTime < 2000) {
+        // Shake the canvas
+        const shakeAmount = Math.max(0, 10 - elapsedTime / 200);
+        ctx.save();
+        ctx.translate(
+            (Math.random() - 0.5) * shakeAmount, 
+            (Math.random() - 0.5) * shakeAmount
+        );
+        
+        // Red overlay
+        const alpha = Math.max(0, 0.7 - elapsedTime / 2000);
+        ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.restore();
     }
 }
 
-// Draw a Wall-E inspired robot
-function drawRobot(x, y, width, height, facingRight, isDigging, energy) {
+// Draw the player robot
+function drawRobot(player, playerHit) {
+    const x = player.x;
+    const y = player.y;
+    const width = player.width;
+    const height = player.height;
+    const facingRight = player.facingRight;
+    const isDigging = player.isDigging;
+    
+    // Handle death animation
+    if (player.isDead) {
+        const timeSinceDeath = Date.now() - player.deathTime;
+        
+        // Death animation phases
+        if (timeSinceDeath < 1500) {
+            // Flash red and show explosion effects
+            const flashFrequency = 100; // milliseconds
+            const isVisible = Math.floor(timeSinceDeath / flashFrequency) % 2 === 0;
+            
+            if (isVisible) {
+                // Draw damaged robot with red tint
+                drawDamagedRobot(x, y, width, height, facingRight, timeSinceDeath);
+                
+                // Create explosion particles
+                if (timeSinceDeath < 1000 && Math.random() < 0.3) {
+                    createExplosionParticle(
+                        x + width/2 + (Math.random() - 0.5) * width,
+                        y + height/2 + (Math.random() - 0.5) * height
+                    );
+                }
+            }
+            
+            // Create some smoke during the explosion
+            if (Math.random() < 0.2) {
+                createSmokeParticle(
+                    x + width/2 + (Math.random() - 0.5) * width,
+                    y + height/2 + (Math.random() - 0.5) * height
+                );
+            }
+        } else if (timeSinceDeath < 3000) {
+            // Show broken robot parts
+            drawBrokenRobotParts(x, y, width, height, facingRight, timeSinceDeath);
+            
+            // Create occasional smoke
+            if (Math.random() < 0.05) {
+                createSmokeParticle(
+                    x + width/2 + (Math.random() - 0.5) * width,
+                    y + height/4 + (Math.random() - 0.5) * height/2
+                );
+            }
+        } else {
+            // Animation is complete
+            player.deathAnimationComplete = true;
+        }
+        
+        return;
+    }
+    
+    // Normal robot drawing for live robot
     // Add digging animation
     const diggingOffset = isDigging ? Math.sin(Date.now() / 100) * 2 : 0;
     
+    // Flash effect when hit
+    const isFlashing = playerHit && (Math.floor(Date.now() / 100) % 2 === 0);
+    
     // Main body (slightly compressed cube)
-    ctx.fillStyle = '#E8A30C'; // Wall-E yellow
+    ctx.fillStyle = isFlashing ? '#FF5555' : '#E8A30C'; // Wall-E yellow or flash red when hit
     ctx.fillRect(x + width * 0.1, y + height * 0.2 + diggingOffset, width * 0.8, height * 0.6);
     
     // Treads/wheels
@@ -549,7 +661,7 @@ function drawRobot(x, y, width, height, facingRight, isDigging, energy) {
     }
     
     // Head
-    ctx.fillStyle = '#E8A30C';
+    ctx.fillStyle = isFlashing ? '#FF5555' : '#E8A30C';
     ctx.fillRect(x + width * 0.15, y + diggingOffset/2, width * 0.7, height * 0.25);
     
     // Eyes (binoculars style)
@@ -559,7 +671,7 @@ function drawRobot(x, y, width, height, facingRight, isDigging, energy) {
         ctx.fillRect(x + width * 0.6, y + height * 0.05 + diggingOffset/2, width * 0.25, height * 0.15);
         
         // Eye details - orange when digging, blue normally
-        ctx.fillStyle = isDigging ? '#FF9900' : '#66CCFF';
+        ctx.fillStyle = isFlashing ? '#FFFFFF' : (isDigging ? '#FF9900' : '#66CCFF');
         ctx.fillRect(x + width * 0.65, y + height * 0.07 + diggingOffset/2, width * 0.15, height * 0.1);
         
         // Eyebrow - angled down when digging
@@ -575,7 +687,7 @@ function drawRobot(x, y, width, height, facingRight, isDigging, energy) {
         ctx.restore();
         
         // Arm (digging tool) - animated when digging
-        ctx.fillStyle = '#E8A30C';
+        ctx.fillStyle = isFlashing ? '#FF5555' : '#E8A30C';
         if (isDigging) {
             // Animated digging motion
             const digAngle = Math.sin(Date.now() / 150) * 15;
@@ -596,16 +708,16 @@ function drawRobot(x, y, width, height, facingRight, isDigging, energy) {
             ctx.restore();
             
             // Add digging particles
-            if (Math.random() < 0.3 && !window.gamePaused) {
-                particles.push({
-                    x: x + width * 1.3 + Math.random() * 10,
-                    y: y + height * 0.4 + Math.random() * 10,
-                    vx: (Math.random() - 0.5) * 2,
-                    vy: -Math.random() * 3,
-                    size: 2 + Math.random() * 3,
-                    color: '#8B4513',
-                    life: 10 + Math.random() * 20
-                });
+            if (Math.random() < 0.3 && !gamePaused) {
+                createParticle(
+                    x + width * 1.3 + Math.random() * 10,
+                    y + height * 0.4 + Math.random() * 10,
+                    (Math.random() - 0.5) * 2,
+                    -Math.random() * 3,
+                    2 + Math.random() * 3,
+                    '#8B4513',
+                    10 + Math.random() * 20
+                );
             }
         } else {
             ctx.fillRect(x + width * 0.8, y + height * 0.3, width * 0.3, height * 0.15);
@@ -625,7 +737,7 @@ function drawRobot(x, y, width, height, facingRight, isDigging, energy) {
         ctx.fillRect(x + width * 0.15, y + height * 0.05 + diggingOffset/2, width * 0.25, height * 0.15);
         
         // Eye details - orange when digging, blue normally
-        ctx.fillStyle = isDigging ? '#FF9900' : '#66CCFF';
+        ctx.fillStyle = isFlashing ? '#FFFFFF' : (isDigging ? '#FF9900' : '#66CCFF');
         ctx.fillRect(x + width * 0.2, y + height * 0.07 + diggingOffset/2, width * 0.15, height * 0.1);
         
         // Eyebrow - angled down when digging
@@ -641,7 +753,7 @@ function drawRobot(x, y, width, height, facingRight, isDigging, energy) {
         ctx.restore();
         
         // Arm (digging tool) - animated when digging
-        ctx.fillStyle = '#E8A30C';
+        ctx.fillStyle = isFlashing ? '#FF5555' : '#E8A30C';
         if (isDigging) {
             // Animated digging motion
             const digAngle = Math.sin(Date.now() / 150) * 15;
@@ -662,16 +774,16 @@ function drawRobot(x, y, width, height, facingRight, isDigging, energy) {
             ctx.restore();
             
             // Add digging particles
-            if (Math.random() < 0.3 && !window.gamePaused) {
-                particles.push({
-                    x: x - width * 0.5 - Math.random() * 10,
-                    y: y + height * 0.4 + Math.random() * 10,
-                    vx: (Math.random() - 0.5) * 2,
-                    vy: -Math.random() * 3,
-                    size: 2 + Math.random() * 3,
-                    color: '#8B4513',
-                    life: 10 + Math.random() * 20
-                });
+            if (Math.random() < 0.3 && !gamePaused) {
+                createParticle(
+                    x - width * 0.5 - Math.random() * 10,
+                    y + height * 0.4 + Math.random() * 10,
+                    (Math.random() - 0.5) * 2,
+                    -Math.random() * 3,
+                    2 + Math.random() * 3,
+                    '#8B4513',
+                    10 + Math.random() * 20
+                );
             }
         } else {
             ctx.fillRect(x - width * 0.3, y + height * 0.3, width * 0.3, height * 0.15);
@@ -711,7 +823,7 @@ function drawRobot(x, y, width, height, facingRight, isDigging, energy) {
     ctx.fill();
     
     // Energy meter - pulsing when digging
-    const energyPercentage = Math.min(1, energy / 100);
+    const energyPercentage = Math.min(1, player.energy / 100);
     const meterPulse = isDigging ? 1 + Math.sin(Date.now() / 100) * 0.1 : 1;
     
     ctx.fillStyle = '#333';
@@ -723,17 +835,179 @@ function drawRobot(x, y, width, height, facingRight, isDigging, energy) {
                 width * 0.46 * energyPercentage * meterPulse, height * 0.06);
     
     // Add sweat drops when digging
-    if (isDigging && Math.random() < 0.05 && !window.gamePaused) {
-        particles.push({
-            x: x + width * 0.5 + (Math.random() - 0.5) * width * 0.3,
-            y: y + height * 0.1,
-            vx: (Math.random() - 0.5) * 1,
-            vy: 1 + Math.random() * 2,
-            size: 2 + Math.random() * 2,
-            color: 'rgba(150, 220, 255, 0.7)',
-            life: 20 + Math.random() * 15
-        });
+    if (isDigging && Math.random() < 0.05 && !gamePaused) {
+        createParticle(
+            x + width * 0.5 + (Math.random() - 0.5) * width * 0.3,
+            y + height * 0.1,
+            (Math.random() - 0.5) * 1,
+            1 + Math.random() * 2,
+            2 + Math.random() * 2,
+            'rgba(150, 220, 255, 0.7)',
+            20 + Math.random() * 15
+        );
     }
+}
+
+// Draw damaged robot during death animation
+function drawDamagedRobot(x, y, width, height, facingRight, timeSinceDeath) {
+    // Calculate explosion force
+    const explosionForce = Math.min(1, timeSinceDeath / 1000) * 5;
+    const jitter = Math.sin(timeSinceDeath / 30) * explosionForce;
+    
+    // Draw with red tint and jittering
+    ctx.fillStyle = '#FF3333';
+    ctx.fillRect(
+        x + width * 0.1 + jitter, 
+        y + height * 0.2 + jitter, 
+        width * 0.8, 
+        height * 0.6
+    );
+    
+    // Damaged treads
+    ctx.fillStyle = '#555555';
+    ctx.fillRect(
+        x + jitter, 
+        y + height * 0.8 - jitter, 
+        width, 
+        height * 0.2
+    );
+    
+    // Damaged head
+    ctx.fillStyle = '#FF3333';
+    ctx.fillRect(
+        x + width * 0.15 - jitter, 
+        y + jitter/2, 
+        width * 0.7, 
+        height * 0.25
+    );
+    
+    // Sparking eyes
+    ctx.fillStyle = '#FFFF00';
+    if (facingRight) {
+        ctx.fillRect(
+            x + width * 0.6 + jitter, 
+            y + height * 0.05 + jitter/2, 
+            width * 0.25, 
+            height * 0.15
+        );
+    } else {
+        ctx.fillRect(
+            x + width * 0.15 - jitter, 
+            y + height * 0.05 + jitter/2, 
+            width * 0.25, 
+            height * 0.15
+        );
+    }
+    
+    // Cracks and damage detail
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x + width * 0.3, y + height * 0.3);
+    ctx.lineTo(x + width * 0.7, y + height * 0.6);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(x + width * 0.7, y + height * 0.3);
+    ctx.lineTo(x + width * 0.3, y + height * 0.5);
+    ctx.stroke();
+}
+
+// Draw broken robot parts
+function drawBrokenRobotParts(x, y, width, height, facingRight, timeSinceDeath) {
+    const fadeOut = Math.max(0, 1 - (timeSinceDeath - 1500) / 1500);
+    
+    // Body parts scattered
+    ctx.globalAlpha = fadeOut;
+    
+    // Main body - broken in half
+    ctx.fillStyle = '#AA2200';
+    ctx.fillRect(
+        x + width * 0.1, 
+        y + height * 0.4, 
+        width * 0.4, 
+        height * 0.4
+    );
+    
+    // Other half of body
+    ctx.fillRect(
+        x + width * 0.6, 
+        y + height * 0.5, 
+        width * 0.3, 
+        height * 0.3
+    );
+    
+    // Head - detached
+    ctx.fillStyle = '#AA2200';
+    ctx.fillRect(
+        x + width * 0.2, 
+        y + height * 0.1, 
+        width * 0.5, 
+        height * 0.2
+    );
+    
+    // Treads - broken
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(
+        x, 
+        y + height * 0.9, 
+        width * 0.7, 
+        height * 0.1
+    );
+    
+    // Arm - detached
+    ctx.fillStyle = '#AA2200';
+    if (facingRight) {
+        ctx.fillRect(
+            x + width * 0.9, 
+            y + height * 0.6, 
+            width * 0.2, 
+            height * 0.1
+        );
+    } else {
+        ctx.fillRect(
+            x - width * 0.1, 
+            y + height * 0.6, 
+            width * 0.2, 
+            height * 0.1
+        );
+    }
+    
+    // Restore alpha
+    ctx.globalAlpha = 1.0;
+}
+
+// Create an explosion particle
+function createExplosionParticle(x, y) {
+    // Create glowing red/orange particle
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1 + Math.random() * 3;
+    
+    createParticle(
+        x,
+        y,
+        Math.cos(angle) * speed,
+        Math.sin(angle) * speed,
+        2 + Math.random() * 4,
+        `hsl(${10 + Math.random() * 30}, 100%, ${50 + Math.random() * 50}%)`,
+        10 + Math.random() * 15
+    );
+}
+
+// Create a smoke particle
+function createSmokeParticle(x, y) {
+    const angle = -Math.PI/2 + (Math.random() - 0.5) * Math.PI/4; // Mostly upward
+    const speed = 0.5 + Math.random() * 1;
+    
+    createParticle(
+        x,
+        y,
+        Math.cos(angle) * speed,
+        Math.sin(angle) * speed,
+        5 + Math.random() * 8,
+        `rgba(${50 + Math.random() * 50}, ${50 + Math.random() * 50}, ${50 + Math.random() * 50}, ${0.5 + Math.random() * 0.5})`,
+        30 + Math.random() * 30
+    );
 }
 
 // Update and draw particles
@@ -796,5 +1070,214 @@ export function createTextParticle(x, y, text, upwardVelocity = -1.5) {
         text: text,
         life: 40,
         vy: upwardVelocity
+    });
+}
+
+// Draw enemy robot
+export function drawEnemy(enemy) {
+    // Enemy position
+    const x = enemy.x;
+    const y = enemy.y;
+    const width = enemy.width;
+    const height = enemy.height;
+    const facingRight = enemy.facingRight;
+    const isAttacking = Date.now() - enemy.lastAttackTime < 500; // Animation for 500ms after attack
+    const isPatrolling = enemy.isPatrolling;
+    const seesPlayer = enemy.seesPlayer;
+    
+    // Calculate animation offset for more robot-like movement
+    const patrolOffset = isPatrolling ? Math.sin(Date.now() / 150) * 2 : 0;
+    const chaseOffset = seesPlayer && !isPatrolling ? Math.sin(Date.now() / 100) * 3 : 0;
+    const offset = patrolOffset + chaseOffset;
+    
+    // Draw evil robot - slightly larger and red-themed
+    
+    // Main body - evil version is darker and red-tinted
+    ctx.fillStyle = '#8B0000'; // Dark red
+    ctx.fillRect(x + width * 0.1, y + height * 0.2 + offset, width * 0.8, height * 0.6);
+    
+    // Treads/wheels
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(x, y + height * 0.8 + offset, width, height * 0.2);
+    
+    // Tread details
+    ctx.fillStyle = '#555555';
+    for (let i = 0; i < 4; i++) {
+        ctx.fillRect(x + width * 0.2 * i, y + height * 0.82 + offset, width * 0.15, height * 0.16);
+    }
+    
+    // Head
+    ctx.fillStyle = '#8B0000'; // Dark red
+    ctx.fillRect(x + width * 0.15, y + offset/2, width * 0.7, height * 0.25);
+    
+    // Eyes - red glowing for enemy
+    ctx.fillStyle = '#333';
+    if (facingRight) {
+        // Right-facing eyes
+        ctx.fillRect(x + width * 0.6, y + height * 0.05 + offset/2, width * 0.25, height * 0.15);
+        
+        // Eye details - red when attacking, glowing red normally
+        ctx.fillStyle = isAttacking ? '#FF0000' : '#DD0000';
+        ctx.fillRect(x + width * 0.65, y + height * 0.07 + offset/2, width * 0.15, height * 0.1);
+        
+        // Angry eyebrow
+        ctx.fillStyle = '#333';
+        ctx.save();
+        ctx.translate(x + width * 0.72, y - height * 0.02 + offset/2);
+        ctx.rotate(Math.PI / 20); // Angry angle
+        ctx.fillRect(-width * 0.12, 0, width * 0.25, height * 0.04);
+        ctx.restore();
+        
+        // Evil arm (weapon)
+        if (isAttacking) {
+            // Attack animation
+            ctx.fillStyle = '#B22222'; // FireBrick
+            ctx.save();
+            ctx.translate(x + width * 0.95, y + height * 0.38);
+            ctx.rotate((Math.PI / 6) * Math.sin(Date.now() / 50)); // Fast attack motion
+            ctx.fillRect(0, -height * 0.07, width * 0.4, height * 0.15);
+            
+            // Weapon tip - blaster or laser
+            ctx.fillStyle = '#FF3300';
+            ctx.beginPath();
+            ctx.moveTo(width * 0.4, -height * 0.07);
+            ctx.lineTo(width * 0.5, -height * 0.12);
+            ctx.lineTo(width * 0.5, height * 0.08);
+            ctx.lineTo(width * 0.4, height * 0.08);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        } else {
+            // Regular arm position
+            ctx.fillStyle = '#B22222'; // FireBrick
+            ctx.fillRect(x + width * 0.8, y + height * 0.3, width * 0.3, height * 0.15);
+            
+            // Weapon tip - blaster or laser
+            ctx.fillStyle = '#FF3300';
+            ctx.beginPath();
+            ctx.moveTo(x + width * 1.1, y + height * 0.3);
+            ctx.lineTo(x + width * 1.2, y + height * 0.25);
+            ctx.lineTo(x + width * 1.2, y + height * 0.5);
+            ctx.lineTo(x + width * 1.1, y + height * 0.45);
+            ctx.closePath();
+            ctx.fill();
+        }
+    } else {
+        // Left-facing version
+        ctx.fillRect(x + width * 0.15, y + height * 0.05 + offset/2, width * 0.25, height * 0.15);
+        
+        // Eye details - red when attacking, glowing red normally
+        ctx.fillStyle = isAttacking ? '#FF0000' : '#DD0000';
+        ctx.fillRect(x + width * 0.2, y + height * 0.07 + offset/2, width * 0.15, height * 0.1);
+        
+        // Angry eyebrow
+        ctx.fillStyle = '#333';
+        ctx.save();
+        ctx.translate(x + width * 0.28, y - height * 0.02 + offset/2);
+        ctx.rotate(-Math.PI / 20); // Angry angle
+        ctx.fillRect(-width * 0.12, 0, width * 0.25, height * 0.04);
+        ctx.restore();
+        
+        // Evil arm (weapon)
+        if (isAttacking) {
+            // Attack animation
+            ctx.fillStyle = '#B22222'; // FireBrick
+            ctx.save();
+            ctx.translate(x + width * 0.05, y + height * 0.38);
+            ctx.rotate((-Math.PI / 6) * Math.sin(Date.now() / 50)); // Fast attack motion
+            ctx.fillRect(-width * 0.4, -height * 0.07, width * 0.4, height * 0.15);
+            
+            // Weapon tip - blaster or laser
+            ctx.fillStyle = '#FF3300';
+            ctx.beginPath();
+            ctx.moveTo(-width * 0.4, -height * 0.07);
+            ctx.lineTo(-width * 0.5, -height * 0.12);
+            ctx.lineTo(-width * 0.5, height * 0.08);
+            ctx.lineTo(-width * 0.4, height * 0.08);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        } else {
+            // Regular arm position
+            ctx.fillStyle = '#B22222'; // FireBrick
+            ctx.fillRect(x - width * 0.3, y + height * 0.3, width * 0.3, height * 0.15);
+            
+            // Weapon tip - blaster or laser
+            ctx.fillStyle = '#FF3300';
+            ctx.beginPath();
+            ctx.moveTo(x - width * 0.3, y + height * 0.3);
+            ctx.lineTo(x - width * 0.4, y + height * 0.25);
+            ctx.lineTo(x - width * 0.4, y + height * 0.5);
+            ctx.lineTo(x - width * 0.3, y + height * 0.45);
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+    
+    // Evil robot details/markings
+    ctx.fillStyle = '#333';
+    ctx.fillRect(x + width * 0.3, y + height * 0.4 + offset, width * 0.4, height * 0.1);
+    
+    // Red evil lights
+    ctx.fillStyle = isAttacking ? '#FF0000' : (Math.floor(Date.now() / 300) % 2 === 0 ? '#DD0000' : '#880000');
+    ctx.beginPath();
+    ctx.arc(x + width * 0.35, y + height * 0.45 + offset, width * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = isAttacking ? '#FF0000' : (Math.floor(Date.now() / 300) % 2 === 1 ? '#DD0000' : '#880000');
+    ctx.beginPath();
+    ctx.arc(x + width * 0.65, y + height * 0.45 + offset, width * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Draw a health bar above enemy
+    const healthPercent = enemy.health / 40; // Updated from 30 to match new max health
+    const barWidth = width * 0.8;
+    const barHeight = height * 0.05;
+    
+    // Bar background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(x + width * 0.1, y - barHeight - 5, barWidth, barHeight);
+    
+    // Health fill
+    ctx.fillStyle = healthPercent > 0.5 ? '#00DD00' : (healthPercent > 0.25 ? '#DDDD00' : '#DD0000');
+    ctx.fillRect(x + width * 0.1, y - barHeight - 5, barWidth * healthPercent, barHeight);
+    
+    // If enemy sees player, draw an alert indicator
+    if (seesPlayer && !isPatrolling) {
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+        ctx.beginPath();
+        ctx.moveTo(x + width / 2, y - height * 0.2);
+        ctx.lineTo(x + width / 2 - 8, y - height * 0.4);
+        ctx.lineTo(x + width / 2 + 8, y - height * 0.4);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Exclamation mark
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('!', x + width / 2, y - height * 0.25);
+    }
+}
+
+// Update and draw all effects
+function updateAndDrawEffects() {
+    // Draw dig effect
+    drawDigEffect(window.gamePaused);
+    
+    // Update and draw particles
+    updateAndDrawParticles(window.gamePaused);
+}
+
+// Create a particle
+export function createParticle(x, y, vx, vy, size, color, life) {
+    particles.push({
+        x: x,
+        y: y,
+        vx: vx,
+        vy: vy,
+        size: size,
+        color: color,
+        life: life
     });
 } 
