@@ -114,7 +114,15 @@ function setupTouchControls(togglePauseCallback) {
     });
     
     // Pause button
-    pauseBtn.addEventListener('touchstart', () => {
+    pauseBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        togglePauseCallback();
+    });
+    
+    // Also handle touch events for mobile
+    pauseBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         togglePauseCallback();
     });
     
@@ -140,8 +148,4 @@ function setupTouchControls(togglePauseCallback) {
     digBtn.addEventListener('mousedown', () => touchControls.dig = true);
     digBtn.addEventListener('mouseup', () => touchControls.dig = false);
     digBtn.addEventListener('mouseleave', () => touchControls.dig = false);
-    
-    pauseBtn.addEventListener('mousedown', () => {
-        togglePauseCallback();
-    });
 } 
