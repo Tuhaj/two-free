@@ -271,208 +271,68 @@
                 right: 0;
                 display: flex;
                 flex-direction: column;
-                gap: 10px;
-                padding: 10px 20px 20px 20px;
                 z-index: 1000;
-                background: rgba(0, 10, 20, 0.8);
-                border-top: 2px solid rgba(102, 204, 255, 0.5);
-                box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
+                background: none;
+                border: none;
+                box-shadow: none;
+                display: block !important; /* Force display */
             }
             
-            #tablet-layout {
-                position: relative;
-                display: flex;
-                justify-content: space-between;
-                width: 100%;
-                max-width: 100%;
-                margin: 0 auto;
+            /* Make sure the entry screen is visible */
+            #entry-screen {
+                width: 100% !important;
+                height: 100% !important;
+                padding: 10px !important;
+                box-sizing: border-box;
+                overflow-y: auto !important;
             }
             
-            .tablet-controls-left {
-                position: fixed;
-                bottom: 80px;
-                left: 20px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
+            /* Make start button more prominent */
+            #start-game-btn {
+                margin-top: 20px !important;
+                padding: 15px 30px !important;
+                font-size: 22px !important;
+                background: rgba(102, 204, 255, 0.5) !important;
+                border-width: 3px !important;
             }
             
-            .tablet-controls-right {
-                position: fixed;
-                bottom: 80px;
-                right: 20px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .control-row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 0;
-                width: 100%;
-                max-width: 500px;
-                margin: 0 auto;
-            }
-            
-            .control-row:first-child {
-                justify-content: center;
-                margin-bottom: 5px;
-            }
-            
+            /* Control buttons base style */
             .control-btn {
-                width: 70px;
-                height: 70px;
-                font-size: 30px;
+                width: 75px;
+                height: 75px;
                 background: rgba(102, 204, 255, 0.5);
                 border: 3px solid #66CCFF;
                 box-shadow: 0 0 15px rgba(102, 204, 255, 0.7);
-                position: relative;
+                border-radius: 50%;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
+                color: white;
                 -webkit-tap-highlight-color: transparent;
-                user-select: none;
                 touch-action: manipulation;
-            }
-            
-            .control-btn::after {
-                content: '';
-                position: absolute;
-                top: -10px;
-                left: -10px;
-                right: -10px;
-                bottom: -10px;
-                z-index: -1;
-            }
-            
-            .btn-icon {
-                font-size: 34px;
-                line-height: 1;
-                font-weight: bold;
-                text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
-            }
-            
-            .btn-label {
-                font-size: 13px;
-                margin-top: 4px;
-                font-weight: bold;
-                text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
-                letter-spacing: 0.5px;
-            }
-            
-            .control-btn:active {
-                background: rgba(102, 204, 255, 0.8);
-                transform: scale(0.95);
-                box-shadow: 0 0 25px rgba(102, 204, 255, 0.9);
+                transition: all 0.2s;
             }
             
             .control-btn.large {
-                width: 90px;
-                height: 90px;
+                width: 85px;
+                height: 85px;
             }
             
             .control-btn.dig-btn {
                 background: rgba(255, 160, 0, 0.5);
                 border-color: #FFA000;
+                box-shadow: 0 0 15px rgba(255, 160, 0, 0.7);
             }
             
-            .control-btn.dig-btn:active {
-                background: rgba(255, 160, 0, 0.8);
-                box-shadow: 0 0 25px rgba(255, 160, 0, 0.9);
+            .btn-icon {
+                font-size: 32px;
+                text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
             }
             
-            #leftBtn, #rightBtn, #leftBtn-alt, #rightBtn-alt, #leftBtn-left, #rightBtn-left {
-                position: relative;
-            }
-            
-            #leftBtn::before, #rightBtn::before, 
-            #leftBtn-alt::before, #rightBtn-alt::before,
-            #leftBtn-left::before, #rightBtn-left::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 10, 20, 0.4);
-                border-radius: 50%;
-                z-index: -1;
-            }
-            
-            @media (prefers-contrast: more) {
-                .control-btn {
-                    background: rgba(102, 204, 255, 0.9);
-                    border-width: 4px;
-                }
-                
-                .control-btn.dig-btn {
-                    background: rgba(255, 160, 0, 0.9);
-                }
-                
-                .btn-label, .btn-icon {
-                    text-shadow: 0 0 8px black;
-                }
-            }
-            
-            @media (orientation: portrait) {
-                #touch-controls {
-                    bottom: 40px;
-                }
-                
-                .control-btn {
-                    width: 80px;
-                    height: 80px;
-                }
-                
-                .control-btn.large {
-                    width: 100px;
-                    height: 100px;
-                }
-                
-                .btn-icon {
-                    font-size: 36px;
-                }
-                
-                .btn-label {
-                    font-size: 14px;
-                    margin-top: 5px;
-                }
-            }
-            
-            @media (max-width: 400px) {
-                .control-btn {
-                    width: 65px;
-                    height: 65px;
-                }
-                
-                .control-btn.large {
-                    width: 80px;
-                    height: 80px;
-                }
-                
-                .btn-icon {
-                    font-size: 30px;
-                }
-            }
-            
-            /* Improved pause button for mobile */
-            #pauseBtn {
-                width: 60px;
-                height: 60px;
-                font-size: 28px;
-                top: 20px;
-                right: 20px;
-                background: rgba(102, 204, 255, 0.5);
-                border: 3px solid #66CCFF;
-                box-shadow: 0 0 20px rgba(102, 204, 255, 0.6);
-            }
-            
-            #pauseBtn:active {
-                transform: scale(0.95);
-                background: rgba(102, 204, 255, 0.7);
+            .btn-label {
+                font-size: 14px;
+                text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
             }
         }
         
@@ -540,6 +400,425 @@
                 margin-top: 5px;
             }
         }
+        
+        /* Tablet controls specific styling */
+        #tablet-layout {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            margin-top: 10px;
+        }
+        
+        .tablet-controls-left {
+            position: static;
+            display: flex;
+            gap: 20px;
+            justify-content: flex-start;
+        }
+        
+        .tablet-controls-right {
+            position: static;
+            display: flex;
+            gap: 20px;
+            justify-content: flex-end;
+        }
+        
+        /* Phone-specific adjustments */
+        @media (max-width: 480px) {
+            /* Create a control bar at the bottom */
+            #touch-controls {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: rgba(0, 10, 20, 0.7);
+                padding: 10px;
+                border-top: 1px solid rgba(102, 204, 255, 0.3);
+                box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+                display: block !important;
+            }
+            
+            /* Adjust the tablet layout for phones */
+            #tablet-layout {
+                padding: 5px;
+                max-width: 100%;
+                margin: 0 auto;
+                display: flex !important;
+            }
+            
+            /* Hide other layouts */
+            #standard-layout, #lefty-layout {
+                display: none !important;
+            }
+            
+            .tablet-controls-left, .tablet-controls-right {
+                gap: 10px;
+            }
+            
+            /* Make buttons slightly smaller but keep good tap targets */
+            .control-btn {
+                width: 60px;
+                height: 60px;
+                margin: 0;
+            }
+            
+            .control-btn.large {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .btn-icon {
+                font-size: 26px;
+            }
+            
+            .btn-label {
+                font-size: 11px;
+            }
+            
+            /* Make canvas use more vertical space but leave room for controls */
+            canvas {
+                max-height: 60vh !important;
+            }
+            
+            /* Clean up UI display */
+            #ui {
+                top: 45px;
+                left: 10px;
+                font-size: 14px;
+                padding: 8px;
+            }
+            
+            /* Keep pause button visible */
+            #pauseBtn, #soundBtn {
+                width: 42px;
+                height: 42px;
+                font-size: 20px;
+                top: 10px;
+            }
+            
+            #pauseBtn {
+                right: 10px;
+            }
+            
+            #soundBtn {
+                right: 60px;
+            }
+            
+            /* Add space at the bottom for the control bar */
+            body {
+                padding-bottom: 100px;
+            }
+            
+            #game-container {
+                padding-bottom: 100px !important;
+            }
+            
+            /* Fix entry screen for phones */
+            #entry-screen h1 {
+                font-size: 32px !important;
+                margin-bottom: 15px !important;
+            }
+            
+            #entry-screen p {
+                font-size: 14px !important;
+                line-height: 1.4 !important;
+            }
+            
+            #entry-screen div {
+                padding: 15px !important;
+                max-width: 95% !important;
+            }
+        }
+        
+        /* Medium-small phones (430px and below) */
+        @media (max-width: 430px) {
+            /* Create a more compact control layout */
+            #touch-controls {
+                padding: 5px 0;
+            }
+            
+            #tablet-layout {
+                padding: 2px 0;
+            }
+            
+            .tablet-controls-left, .tablet-controls-right {
+                gap: 8px;
+            }
+            
+            /* Make buttons more compact */
+            .control-btn {
+                width: 60px;
+                height: 60px;
+                margin: 2px;
+                border-width: 2px;
+            }
+            
+            .control-btn.large {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .btn-icon {
+                font-size: 22px;
+            }
+            
+            .btn-label {
+                font-size: 10px;
+                margin-top: 1px;
+            }
+            
+            /* Adjust UI for smaller screens */
+            #ui {
+                font-size: 13px;
+                padding: 6px;
+                top: 42px;
+                left: 8px;
+            }
+            
+            /* Smaller pause and sound buttons */
+            #pauseBtn, #soundBtn {
+                width: 40px;
+                height: 40px;
+                font-size: 19px;
+            }
+            
+            #pauseBtn {
+                right: 8px;
+            }
+            
+            #soundBtn {
+                right: 55px;
+            }
+        }
+        
+        /* Smaller phones (390px and below) */
+        @media (max-width: 390px) {
+            /* Create a more compact control layout */
+            #touch-controls {
+                padding: 5px 0 !important;
+            }
+            
+            #tablet-layout {
+                padding: 0;
+            }
+            
+            .tablet-controls-left, .tablet-controls-right {
+                gap: 5px;
+            }
+            
+            /* Make buttons more compact but ensure text fits */
+            .control-btn {
+                width: 55px;
+                height: 55px;
+                margin: 2px;
+                border-width: 2px;
+            }
+            
+            .control-btn.large {
+                width: 65px;
+                height: 65px;
+            }
+            
+            .btn-icon {
+                font-size: 22px;
+            }
+            
+            .btn-label {
+                font-size: 10px;
+                margin-top: 1px;
+            }
+            
+            /* Adjust UI for smaller screens */
+            #ui {
+                font-size: 12px;
+                padding: 5px;
+                top: 40px;
+                left: 5px;
+            }
+            
+            /* Smaller pause and sound buttons */
+            #pauseBtn, #soundBtn {
+                width: 38px;
+                height: 38px;
+                font-size: 18px;
+            }
+            
+            #pauseBtn {
+                right: 5px;
+            }
+            
+            #soundBtn {
+                right: 50px;
+            }
+        }
+        
+        /* Tablet controls button styling */
+        #tablet-layout .control-btn {
+            width: 80px;
+            height: 80px;
+            font-size: 32px;
+            background: rgba(102, 204, 255, 0.5);
+            border: 3px solid #66CCFF;
+            box-shadow: 0 0 20px rgba(102, 204, 255, 0.7);
+            margin: 10px 0;
+        }
+        
+        #tablet-layout .control-btn.large {
+            width: 90px;
+            height: 90px;
+        }
+        
+        #tablet-layout .control-btn.dig-btn {
+            background: rgba(255, 160, 0, 0.5);
+            border-color: #FFA000;
+            box-shadow: 0 0 20px rgba(255, 160, 0, 0.7);
+        }
+        
+        #tablet-layout .btn-icon {
+            font-size: 38px;
+        }
+        
+        #tablet-layout .btn-label {
+            font-size: 14px;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+        }
+        
+        /* Extra small screen adjustments (less than 320px) */
+        @media (max-width: 320px) {
+            /* Adjust layout for tiny screens */
+            #tablet-layout {
+                padding: 5px 0;
+                width: 100%;
+                gap: 0;
+            }
+            
+            .tablet-controls-left, .tablet-controls-right {
+                gap: 5px;
+            }
+            
+            /* Make buttons even smaller for tiny screens */
+            .control-btn {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .control-btn.large {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .btn-icon {
+                font-size: 22px;
+            }
+            
+            .btn-label {
+                font-size: 9px;
+            }
+            
+            /* Adjust UI and button positions */
+            #ui {
+                font-size: 12px;
+                padding: 5px;
+                left: 5px;
+            }
+            
+            #pauseBtn, #soundBtn {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+            
+            #pauseBtn {
+                right: 5px;
+            }
+            
+            #soundBtn {
+                right: 45px;
+            }
+        }
+        
+        /* Extremely narrow screens (240px and below) */
+        @media (max-width: 240px) {
+            /* Adjust controls to be more compact and fit within screen */
+            #tablet-layout {
+                padding: 0;
+                justify-content: center;
+                width: 100%;
+                margin: 0 auto;
+            }
+            
+            /* Remove padding from touch controls container */
+            #touch-controls {
+                padding: 0 !important; /* Override any other padding */
+                background: rgba(0, 10, 20, 0.6);
+            }
+            
+            .tablet-controls-left {
+                width: 45%;
+                justify-content: flex-start;
+                margin-left: 1px;
+            }
+            
+            .tablet-controls-right {
+                width: 45%;
+                justify-content: flex-end;
+                margin-right: 1px;
+            }
+            
+            .tablet-controls-left, .tablet-controls-right {
+                gap: 1px;
+            }
+            
+            /* Make buttons extremely small but still usable */
+            .control-btn {
+                width: 40px;
+                height: 40px;
+                border-width: 1px;
+                box-shadow: 0 0 3px rgba(102, 204, 255, 0.5);
+                margin: 0;
+            }
+            
+            .control-btn.large {
+                width: 45px; 
+                height: 45px;
+            }
+            
+            .btn-icon {
+                font-size: 16px;
+                margin: 0;
+            }
+            
+            .btn-label {
+                font-size: 8px;
+                margin: 0;
+            }
+            
+            /* Adjust other UI elements */
+            #ui {
+                top: 35px;
+                max-width: 80px;
+                font-size: 10px;
+                padding: 3px;
+            }
+            
+            /* Make pause and sound buttons smaller */
+            #pauseBtn, #soundBtn {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+                top: 5px;
+            }
+            
+            #pauseBtn {
+                right: 5px;
+            }
+            
+            #soundBtn {
+                right: 40px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -549,7 +828,7 @@
         </div>
         
         <!-- Entry screen overlay -->
-        <div id="entry-screen" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 20, 40, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; text-align: center; padding: 20px; overflow: hidden;">
+        <div id="entry-screen" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 20, 40, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; text-align: center; padding: 20px; overflow-y: auto; box-sizing: border-box;">
             <!-- Background animation -->
             <div style="position: absolute; width: 100%; height: 100%; overflow: hidden; opacity: 0.2; z-index: -1;">
                 <div id="bg-stars" style="position: absolute; top: 0; left: 0; width: 200%; height: 200%;"></div>
@@ -560,8 +839,8 @@
             <div style="background: rgba(0, 10, 20, 0.8); padding: 20px; border-radius: 15px; max-width: 80%; margin: 0 auto; border: 2px solid #66CCFF; box-shadow: 0 0 30px rgba(102, 204, 255, 0.3);">
                 <p style="color: #fff; margin-bottom: 20px; line-height: 1.5;">In a world torn apart by war, you are one of the two remaining free robots. Your mission is to collect precious energy diamonds deep underground while avoiding deadly missile strikes from above.</p>
                 
-                <div style="display: flex; justify-content: space-around; margin: 20px 0;">
-                    <div style="text-align: center;">
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-around; margin: 20px 0;">
+                    <div style="text-align: center; margin: 0 5px 10px 5px;">
                         <div style="color: #fff; margin-bottom: 10px;">Movement</div>
                         <div style="display: flex; gap: 5px;">
                             <div style="background: rgba(102, 204, 255, 0.3); border: 1px solid #66CCFF; padding: 5px 12px; border-radius: 4px;">↑</div>
@@ -571,7 +850,7 @@
                         </div>
                     </div>
                     
-                    <div style="text-align: center;">
+                    <div style="text-align: center; margin: 0 5px 10px 5px;">
                         <div style="color: #fff; margin-bottom: 10px;">Dig (Down Arrow)</div>
                         <div style="background: rgba(102, 204, 255, 0.3); border: 1px solid #66CCFF; padding: 5px 12px; border-radius: 4px;">↓</div>
                     </div>
@@ -653,16 +932,16 @@
                 <!-- Tablet layout (hidden by default) -->
                 <div id="tablet-layout" role="group" aria-label="Tablet control layout" style="display: none;">
                     <div class="tablet-controls-left">
-                        <div id="jumpBtn-alt" class="control-btn large" role="button" aria-label="Jump" style="margin-bottom: 10px;">
-                            <span class="btn-icon">↑</span>
-                            <span class="btn-label">JUMP</span>
-                        </div>
                         <div id="leftBtn-alt" class="control-btn" role="button" aria-label="Move left">
                             <span class="btn-icon">←</span>
                         </div>
+                        <div id="jumpBtn-alt" class="control-btn large" role="button" aria-label="Jump">
+                            <span class="btn-icon">↑</span>
+                            <span class="btn-label">JUMP</span>
+                        </div>
                     </div>
                     <div class="tablet-controls-right">
-                        <div id="digBtn-alt" class="control-btn dig-btn large" role="button" aria-label="Dig" style="margin-bottom: 10px;">
+                        <div id="digBtn-alt" class="control-btn dig-btn large" role="button" aria-label="Dig">
                             <span class="btn-icon">↓</span>
                             <span class="btn-label">DIG</span>
                         </div>
@@ -734,7 +1013,75 @@
             const standardLayout = document.getElementById('standard-layout');
             const tabletLayout = document.getElementById('tablet-layout');
             const leftyLayout = document.getElementById('lefty-layout');
+            const touchControls = document.getElementById('touch-controls');
             const pauseBtn = document.getElementById('pauseBtn');
+            const entryScreen = document.getElementById('entry-screen');
+            const startBtn = document.getElementById('start-game-btn');
+            
+            // Special handling for extremely narrow screens
+            function handleExtremelyNarrowScreens() {
+                if (window.innerWidth <= 430) {
+                    // Force styles for very narrow screens
+                    touchControls.style.padding = '0';
+                    const leftButtons = document.querySelectorAll('.control-btn');
+                    leftButtons.forEach(btn => {
+                        btn.style.width = '55px';
+                        btn.style.height = '55px';
+                        btn.style.margin = '2px';
+                        btn.style.borderWidth = '2px';
+                    });
+                    
+                    // Make large buttons slightly larger
+                    const largeButtons = document.querySelectorAll('.control-btn.large');
+                    largeButtons.forEach(btn => {
+                        btn.style.width = '65px';
+                        btn.style.height = '65px';
+                    });
+                    
+                    // Even more compact for truly tiny screens
+                    if (window.innerWidth <= 390) {
+                        leftButtons.forEach(btn => {
+                            btn.style.width = '50px';
+                            btn.style.height = '50px';
+                            btn.style.margin = '1px';
+                        });
+                        
+                        largeButtons.forEach(btn => {
+                            btn.style.width = '58px';
+                            btn.style.height = '58px';
+                        });
+                    }
+                    
+                    // Super compact for extremely small screens
+                    if (window.innerWidth <= 240) {
+                        leftButtons.forEach(btn => {
+                            btn.style.width = '40px';
+                            btn.style.height = '40px';
+                            btn.style.margin = '0';
+                            btn.style.borderWidth = '1px';
+                        });
+                        
+                        largeButtons.forEach(btn => {
+                            btn.style.width = '45px';
+                            btn.style.height = '45px';
+                        });
+                    }
+                }
+            }
+            
+            // Make sure touch controls are visible on mobile devices
+            if (window.innerWidth <= 800 || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)) {
+                touchControls.style.display = 'block';
+                
+                // Fix mobile start button visibility
+                startBtn.style.fontSize = '22px';
+                startBtn.style.padding = '15px 30px';
+                startBtn.style.background = 'rgba(102, 204, 255, 0.5)';
+                startBtn.style.borderWidth = '3px';
+                
+                // Check for extremely narrow screens
+                handleExtremelyNarrowScreens();
+            }
             
             // Set up pause button functionality
             if (pauseBtn) {
@@ -751,11 +1098,17 @@
             
             // Set layout based on saved preference or device
             function setLayout() {
-                // Check if it's a tablet (based on screen size)
-                const isTablet = window.innerWidth >= 600 && window.innerWidth <= 1024;
+                // Check device type based on screen size
+                const isPhone = window.innerWidth < 480;
+                const isTablet = window.innerWidth >= 480 && window.innerWidth <= 1024;
                 
+                // For phones, force tablet layout as it works better
+                if (isPhone) {
+                    savedLayout = 'tablet';
+                    localStorage.setItem('controlLayout', 'tablet');
+                }
                 // If device is tablet and no preference saved, set tablet layout as default
-                if (isTablet && !savedLayout) {
+                else if (isTablet && !savedLayout) {
                     savedLayout = 'tablet';
                     localStorage.setItem('controlLayout', 'tablet');
                 }
@@ -778,22 +1131,26 @@
                 } else if (savedLayout === 'lefty') {
                     leftyLayout.style.display = 'block';
                 }
+                
+                // Make sure touch controls are always visible on mobile
+                if (window.innerWidth <= 800 || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)) {
+                    touchControls.style.display = 'block';
+                }
+                
+                // For phones, always use tablet layout
+                if (isPhone) {
+                    tabletLayout.style.display = 'flex';
+                }
+                
+                // Handle extremely narrow screens
+                handleExtremelyNarrowScreens();
             }
             
             setLayout();
             
-            // Switch layout on screen orientation change
+            // Switch layout on screen orientation change or resize
             window.addEventListener('resize', function() {
-                const isTablet = window.innerWidth >= 600 && window.innerWidth <= 1024;
-                
-                // Only change layout if there was no previously saved preference
-                if (isTablet && (!localStorage.getItem('controlLayout') || localStorage.getItem('controlLayout') === 'standard')) {
-                    localStorage.setItem('controlLayout', 'tablet');
-                    setLayout();
-                } else if (!isTablet && localStorage.getItem('controlLayout') === 'tablet') {
-                    localStorage.setItem('controlLayout', 'standard');
-                    setLayout();
-                }
+                setLayout();
             });
             
             // Connect alternative layout buttons to the same functions as the standard buttons
