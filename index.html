@@ -279,6 +279,33 @@
                 box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
             }
             
+            #tablet-layout {
+                position: relative;
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+                max-width: 100%;
+                margin: 0 auto;
+            }
+            
+            .tablet-controls-left {
+                position: fixed;
+                bottom: 80px;
+                left: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .tablet-controls-right {
+                position: fixed;
+                bottom: 80px;
+                right: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            
             .control-row {
                 display: flex;
                 justify-content: space-between;
@@ -373,22 +400,6 @@
                 background: rgba(0, 10, 20, 0.4);
                 border-radius: 50%;
                 z-index: -1;
-            }
-            
-            #tablet-layout {
-                display: flex;
-                justify-content: space-between;
-                width: 100%;
-                max-width: 500px;
-                margin: 0 auto;
-            }
-            
-            .tablet-controls-left, .tablet-controls-right {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                width: 40%;
             }
             
             @media (prefers-contrast: more) {
@@ -611,7 +622,7 @@
             <div id="achievements" style="position: absolute; top: 60px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 1000;"></div>
             
             <!-- Pause button that's always visible -->
-            <div id="pauseBtn" role="button" aria-label="Pause game" tabindex="0" style="position: absolute; top: 15px; right: 15px; background: rgba(102, 204, 255, 0.4); border: 2px solid #66CCFF; border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 24px; color: white; cursor: pointer; z-index: 100; box-shadow: 0 0 15px rgba(102, 204, 255, 0.5); -webkit-tap-highlight-color: transparent;">⏸️</div>
+            <div id="pauseBtn" role="button" aria-label="Pause game" tabindex="0" style="position: absolute; top: 15px; right: 15px; background: rgba(102, 204, 255, 0.4); border: 2px solid #66CCFF; border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 24px; color: white; cursor: pointer; z-index: 100; box-shadow: 0 0 15px rgba(102, 204, 255, 0.5); -webkit-tap-highlight-color: transparent;" onclick="if(typeof window.togglePause === 'function') window.togglePause();">⏸️</div>
             
             <!-- Sound toggle button -->
             <div id="soundBtn" role="button" aria-label="Toggle sound" tabindex="0" style="position: absolute; top: 15px; right: 75px; background: rgba(102, 204, 255, 0.4); border: 2px solid #66CCFF; border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 24px; color: white; cursor: pointer; z-index: 100; box-shadow: 0 0 15px rgba(102, 204, 255, 0.5); -webkit-tap-highlight-color: transparent;">🔊</div>
@@ -642,25 +653,21 @@
                 <!-- Tablet layout (hidden by default) -->
                 <div id="tablet-layout" role="group" aria-label="Tablet control layout" style="display: none;">
                     <div class="tablet-controls-left">
-                        <div id="jumpBtn-alt" class="control-btn large" role="button" aria-label="Jump">
+                        <div id="jumpBtn-alt" class="control-btn large" role="button" aria-label="Jump" style="margin-bottom: 10px;">
                             <span class="btn-icon">↑</span>
                             <span class="btn-label">JUMP</span>
                         </div>
-                        <div style="margin-top: 15px;">
-                            <div id="leftBtn-alt" class="control-btn" role="button" aria-label="Move left">
-                                <span class="btn-icon">←</span>
-                            </div>
+                        <div id="leftBtn-alt" class="control-btn" role="button" aria-label="Move left">
+                            <span class="btn-icon">←</span>
                         </div>
                     </div>
                     <div class="tablet-controls-right">
-                        <div id="digBtn-alt" class="control-btn dig-btn large" role="button" aria-label="Dig">
+                        <div id="digBtn-alt" class="control-btn dig-btn large" role="button" aria-label="Dig" style="margin-bottom: 10px;">
                             <span class="btn-icon">↓</span>
                             <span class="btn-label">DIG</span>
                         </div>
-                        <div style="margin-top: 15px;">
-                            <div id="rightBtn-alt" class="control-btn" role="button" aria-label="Move right">
-                                <span class="btn-icon">→</span>
-                            </div>
+                        <div id="rightBtn-alt" class="control-btn" role="button" aria-label="Move right">
+                            <span class="btn-icon">→</span>
                         </div>
                     </div>
                 </div>
@@ -727,6 +734,17 @@
             const standardLayout = document.getElementById('standard-layout');
             const tabletLayout = document.getElementById('tablet-layout');
             const leftyLayout = document.getElementById('lefty-layout');
+            const pauseBtn = document.getElementById('pauseBtn');
+            
+            // Set up pause button functionality
+            if (pauseBtn) {
+                pauseBtn.addEventListener('click', function() {
+                    // Ensure the window.togglePause exists before calling it
+                    if (typeof window.togglePause === 'function') {
+                        window.togglePause();
+                    }
+                });
+            }
             
             // Use localStorage to remember user's layout preference
             let savedLayout = localStorage.getItem('controlLayout');

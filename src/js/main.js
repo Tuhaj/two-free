@@ -104,6 +104,9 @@ function startGame() {
     requestAnimationFrame(gameLoop);
 }
 
+// Make startGame globally available for restarting the game
+window.startGame = startGame;
+
 // Toggle pause state
 function togglePause() {
     // Only allow pausing if the game has started
@@ -113,6 +116,9 @@ function togglePause() {
         updatePauseButtonAppearance(gamePaused);
     }
 }
+
+// Make togglePause globally available
+window.togglePause = togglePause;
 
 // Complete the current level with success
 function completeLevelWithSuccess() {
@@ -327,9 +333,6 @@ window.gameState = {
     totalDiamonds,
     warBackgroundElements
 };
-
-// Make startGame available globally
-window.startGame = startGame;
 
 // Initialize everything
 window.onload = function() {
