@@ -916,13 +916,13 @@
                         <div id="rightBtn" class="control-btn" role="button" aria-label="Move right">
                             <span class="btn-icon">→</span>
                         </div>
-                        <div id="jumpBtn" class="control-btn large" role="button" aria-label="Jump">
-                            <span class="btn-icon">↑</span>
-                            <span class="btn-label">JUMP</span>
-                        </div>
                         <div id="digBtn" class="control-btn dig-btn" role="button" aria-label="Dig">
                             <span class="btn-icon">↓</span>
                             <span class="btn-label">DIG</span>
+                        </div>
+                        <div id="jumpBtn" class="control-btn large" role="button" aria-label="Jump">
+                            <span class="btn-icon">↑</span>
+                            <span class="btn-label">JUMP</span>
                         </div>
                     </div>
                 </div>
@@ -938,13 +938,13 @@
                         </div>
                     </div>
                     <div class="tablet-controls-right">
-                        <div id="jumpBtn-alt" class="control-btn large" role="button" aria-label="Jump">
-                            <span class="btn-icon">↑</span>
-                            <span class="btn-label">JUMP</span>
-                        </div>
                         <div id="digBtn-alt" class="control-btn dig-btn large" role="button" aria-label="Dig">
                             <span class="btn-icon">↓</span>
                             <span class="btn-label">DIG</span>
+                        </div>
+                        <div id="jumpBtn-alt" class="control-btn large" role="button" aria-label="Jump">
+                            <span class="btn-icon">↑</span>
+                            <span class="btn-label">JUMP</span>
                         </div>
                     </div>
                 </div>
@@ -958,13 +958,13 @@
                         <div id="rightBtn-left" class="control-btn" role="button" aria-label="Move right">
                             <span class="btn-icon">→</span>
                         </div>
-                        <div id="jumpBtn-left" class="control-btn large" role="button" aria-label="Jump">
-                            <span class="btn-icon">↑</span>
-                            <span class="btn-label">JUMP</span>
-                        </div>
                         <div id="digBtn-left" class="control-btn dig-btn" role="button" aria-label="Dig">
                             <span class="btn-icon">↓</span>
                             <span class="btn-label">DIG</span>
+                        </div>
+                        <div id="jumpBtn-left" class="control-btn large" role="button" aria-label="Jump">
+                            <span class="btn-icon">↑</span>
+                            <span class="btn-label">JUMP</span>
                         </div>
                     </div>
                 </div>
@@ -1154,8 +1154,8 @@
                 // Get all button references
                 const buttons = {
                     jump: [document.getElementById('jumpBtn'), document.getElementById('jumpBtn-alt'), document.getElementById('jumpBtn-left')],
-                    left: [document.getElementById('leftBtn'), document.getElementById('leftBtn-alt'), document.getElementById('leftBtn-left')],
-                    right: [document.getElementById('rightBtn'), document.getElementById('rightBtn-alt'), document.getElementById('rightBtn-left')],
+                    left: [document.getElementById('rightBtn'), document.getElementById('rightBtn-alt'), document.getElementById('rightBtn-left')],
+                    right: [document.getElementById('leftBtn'), document.getElementById('leftBtn-alt'), document.getElementById('leftBtn-left')],
                     dig: [document.getElementById('digBtn'), document.getElementById('digBtn-alt'), document.getElementById('digBtn-left')]
                 };
                 
