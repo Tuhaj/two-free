@@ -61,6 +61,23 @@ function startGame() {
     gamePaused = false;
     gameStarted = true;
     
+    // Make sure entry screen is fully hidden
+    const entryScreen = document.getElementById(DOM_IDS.ENTRY_SCREEN);
+    if (entryScreen) {
+        entryScreen.style.display = 'none';
+        entryScreen.style.visibility = 'hidden';
+        entryScreen.style.opacity = '0';
+        entryScreen.style.pointerEvents = 'none';
+        
+        // Disable start button to prevent it from being clicked again
+        const startBtn = document.getElementById(DOM_IDS.START_GAME_BTN);
+        if (startBtn) {
+            startBtn.disabled = true;
+            startBtn.style.pointerEvents = 'none';
+            startBtn.style.opacity = '0';
+        }
+    }
+    
     // Reset achievements
     resetAchievements();
     

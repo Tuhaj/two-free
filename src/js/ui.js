@@ -57,6 +57,10 @@ export function hideEntryScreen() {
         setTimeout(() => {
             entryScreen.style.display = 'none';
             
+            // Make absolutely sure the entry screen is hidden and not interactive
+            entryScreen.style.visibility = 'hidden';
+            entryScreen.style.pointerEvents = 'none';
+            
             // Show the pause button after game starts
             if (pauseBtn) {
                 pauseBtn.style.display = 'flex';
@@ -88,8 +92,18 @@ export function setupEntryScreen(startGameCallback) {
             startGameBtn.style.transform = 'scale(1.05)';
         });
         
+        // Remove any existing click listeners to prevent duplicates
+        const newStartBtn = startGameBtn.cloneNode(true);
+        startGameBtn.parentNode.replaceChild(newStartBtn, startGameBtn);
+        startGameBtn = newStartBtn;
+        
         // Start game when button is clicked
         startGameBtn.addEventListener('click', () => {
+            // Immediately disable the button to prevent multiple clicks
+            startGameBtn.disabled = true;
+            startGameBtn.style.pointerEvents = 'none';
+            startGameBtn.style.opacity = '0.5';
+            
             hideEntryScreen();
             
             // Add a slight delay before starting the game
@@ -134,23 +148,51 @@ export function updateDiamondDisplay(totalDiamonds = 0) {
     diamondDisplay.innerHTML = diamondHTML;
 }
 
-// Show level complete UI
+// Show level complete overlay
 export function showLevelComplete(levelBonus, totalDiamonds) {
-    if (!levelCompleteDiv || !levelBonusSpan || !totalDiamondsSpan) return;
+    const levelCompleteElement = document.getElementById('level-complete');
+    const levelBonusElement = document.getElementById('levelBonus');
+    const totalDiamondsElement = document.getElementById('totalDiamonds');
+    const touchControls = document.getElementById('touch-controls');
     
-    // Update UI values
-    levelBonusSpan.textContent = levelBonus;
-    totalDiamondsSpan.textContent = totalDiamonds;
+    levelBonusElement.textContent = levelBonus;
+    totalDiamondsElement.textContent = totalDiamonds;
     
-    // Show the div
-    levelCompleteDiv.style.display = 'block';
+    // Hide touch controls when showing level complete
+    if (touchControls) {
+        touchControls.style.display = 'none';
+    }
+    
+    // Show with fade
+    levelCompleteElement.style.display = 'block';
+    levelCompleteElement.style.opacity = 0;
+    
+    // Smooth fade in
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            levelCompleteElement.style.transition = 'opacity 0.5s ease';
+            levelCompleteElement.style.opacity = 1;
+        });
+    });
 }
 
-// Hide level complete UI
+// Hide level complete overlay
 export function hideLevelComplete() {
-    if (levelCompleteDiv) {
-        levelCompleteDiv.style.display = 'none';
-    }
+    const levelCompleteElement = document.getElementById('level-complete');
+    const touchControls = document.getElementById('touch-controls');
+    
+    // Fade out
+    levelCompleteElement.style.opacity = 0;
+    
+    // Hide after fade completes
+    setTimeout(() => {
+        levelCompleteElement.style.display = 'none';
+        
+        // Show touch controls again
+        if (touchControls) {
+            touchControls.style.display = 'block';
+        }
+    }, 500);
 }
 
 // Update countdown timer
@@ -293,40 +335,73 @@ export function showGameOver(totalDiamonds, currentLevel) {
     const gameOverElement = document.getElementById('game-over');
     const finalDiamondsElement = document.getElementById('finalDiamonds');
     const levelsCompletedElement = document.getElementById('levelsCompleted');
+    const touchControls = document.getElementById('touch-controls');
     
     // Update stats
     finalDiamondsElement.textContent = totalDiamonds;
     levelsCompletedElement.textContent = currentLevel - 1;
     
+    // Hide touch controls when showing game over to avoid interaction issues
+    if (touchControls) {
+        touchControls.style.display = 'none';
+    }
+    
     // Show the game over screen with fade-in effect
     gameOverElement.style.display = 'block';
     gameOverElement.style.opacity = 0;
     
-    // Fade in
-    let opacity = 0;
-    const fadeIn = setInterval(() => {
-        opacity += 0.05;
-        gameOverElement.style.opacity = opacity;
-        
-        if (opacity >= 1) {
-            clearInterval(fadeIn);
-        }
-    }, 30);
+    // Smoother fade-in with fewer animation steps
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            gameOverElement.style.transition = 'opacity 0.5s ease';
+            gameOverElement.style.opacity = 1;
+        });
+    });
     
     // Add event listener for restart button
     const restartBtn = document.getElementById('restart-game-btn');
-    restartBtn.addEventListener('click', restartGame);
+    
+    // Remove any existing listeners to prevent duplicates
+    const newRestartBtn = restartBtn.cloneNode(true);
+    restartBtn.parentNode.replaceChild(newRestartBtn, restartBtn);
+    newRestartBtn.addEventListener('click', restartGame);
 }
 
 // Hide game over screen
 export function hideGameOver() {
     const gameOverElement = document.getElementById('game-over');
-    gameOverElement.style.display = 'none';
+    const touchControls = document.getElementById('touch-controls');
+    
+    // Fade out
+    gameOverElement.style.opacity = 0;
+    
+    // Hide after fade
+    setTimeout(() => {
+        gameOverElement.style.display = 'none';
+        
+        // Show touch controls again
+        if (touchControls) {
+            touchControls.style.display = 'block';
+        }
+    }, 500);
 }
 
 // Restart game from game over
 function restartGame() {
+    // First hide the game over screen
     hideGameOver();
+    
+    // Make sure entry screen stays hidden when restarting
+    const entryScreen = document.getElementById('entry-screen');
+    if (entryScreen) {
+        entryScreen.style.display = 'none';
+        entryScreen.style.visibility = 'hidden';
+        entryScreen.style.opacity = '0';
+        entryScreen.style.pointerEvents = 'none';
+    }
+    
     // Call the startGame function from main.js
-    window.startGame();
+    setTimeout(() => {
+        window.startGame();
+    }, 200);
 } 

@@ -175,21 +175,23 @@
         }
         
         #level-complete {
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 20, 40, 0.9);
+            background: rgba(0, 20, 40, 0.95);
             color: white;
             padding: 30px;
             border-radius: 15px;
             text-align: center;
             display: none;
-            z-index: 1000;
+            z-index: 3000;
             width: 80%;
             max-width: 400px;
             box-shadow: 0 0 30px rgba(102, 204, 255, 0.7);
             border: 2px solid #66CCFF;
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
         }
         
         #level-complete h2 {
@@ -280,11 +282,45 @@
             
             /* Make sure the entry screen is visible */
             #entry-screen {
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
                 width: 100% !important;
                 height: 100% !important;
                 padding: 10px !important;
-                box-sizing: border-box;
-                overflow-y: auto !important;
+                overflow-y: scroll !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: flex-start !important;
+                align-items: center !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            
+            #entry-screen h1 {
+                font-size: 32px !important;
+                margin-bottom: 15px !important;
+                margin-top: 20px !important;
+            }
+            
+            #entry-screen p {
+                font-size: 14px !important;
+                line-height: 1.4 !important;
+            }
+            
+            #entry-screen div {
+                padding: 15px !important;
+                max-width: 95% !important;
+                margin-bottom: 15px !important;
+            }
+            
+            #start-game-btn {
+                margin: 0 0 30px 0 !important;
+                padding: 15px 30px !important;
+                font-size: 22px !important;
+                background: rgba(102, 204, 255, 0.5) !important;
+                border-width: 3px !important;
+                position: relative !important;
+                display: block !important;
             }
             
             /* Make start button more prominent */
@@ -515,21 +551,7 @@
                 padding-bottom: 100px !important;
             }
             
-            /* Fix entry screen for phones */
-            #entry-screen h1 {
-                font-size: 32px !important;
-                margin-bottom: 15px !important;
-            }
-            
-            #entry-screen p {
-                font-size: 14px !important;
-                line-height: 1.4 !important;
-            }
-            
-            #entry-screen div {
-                padding: 15px !important;
-                max-width: 95% !important;
-            }
+            /* Additional mobile adjustments are already handled in the main selector at the top */
         }
         
         /* Medium-small phones (430px and below) */
@@ -828,15 +850,15 @@
         </div>
         
         <!-- Entry screen overlay -->
-        <div id="entry-screen" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 20, 40, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; text-align: center; padding: 20px; overflow-y: auto; box-sizing: border-box;">
+        <div id="entry-screen" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 20, 40, 0.95); display: flex; flex-direction: column; justify-content: flex-start; align-items: center; z-index: 2000; text-align: center; padding: 20px; overflow-y: auto; box-sizing: border-box; transition: opacity 0.8s ease;">
             <!-- Background animation -->
             <div style="position: absolute; width: 100%; height: 100%; overflow: hidden; opacity: 0.2; z-index: -1;">
                 <div id="bg-stars" style="position: absolute; top: 0; left: 0; width: 200%; height: 200%;"></div>
             </div>
             
-            <h1 style="color: #66CCFF; text-shadow: 0 0 20px rgba(102, 204, 255, 0.7); font-size: 48px; margin-bottom: 20px;">TWO FREE</h1>
+            <h1 style="color: #66CCFF; text-shadow: 0 0 20px rgba(102, 204, 255, 0.7); font-size: 48px; margin-top: 30px; margin-bottom: 20px;">TWO FREE</h1>
             
-            <div style="background: rgba(0, 10, 20, 0.8); padding: 20px; border-radius: 15px; max-width: 80%; margin: 0 auto; border: 2px solid #66CCFF; box-shadow: 0 0 30px rgba(102, 204, 255, 0.3);">
+            <div style="background: rgba(0, 10, 20, 0.8); padding: 20px; border-radius: 15px; max-width: 80%; margin: 0 auto 20px auto; border: 2px solid #66CCFF; box-shadow: 0 0 30px rgba(102, 204, 255, 0.3);">
                 <p style="color: #fff; margin-bottom: 20px; line-height: 1.5;">In a world torn apart by war, you are one of the two remaining free robots. Your mission is to collect precious energy diamonds deep underground while avoiding deadly missile strikes from above.</p>
                 
                 <div style="display: flex; flex-wrap: wrap; justify-content: space-around; margin: 20px 0;">
@@ -859,7 +881,7 @@
                 <p style="color: #fff; margin: 20px 0; line-height: 1.5;">Hide underground to escape missile attacks. Collect all diamonds to advance to the next level.</p>
             </div>
             
-            <button id="start-game-btn" style="margin-top: 30px; background: rgba(102, 204, 255, 0.3); color: white; border: 2px solid #66CCFF; padding: 15px 40px; font-size: 24px; border-radius: 50px; cursor: pointer; font-family: 'Orbitron', sans-serif; box-shadow: 0 0 20px rgba(102, 204, 255, 0.5); transition: all 0.3s ease;">START MISSION</button>
+            <button id="start-game-btn" style="margin: 0 0 30px 0; background: rgba(102, 204, 255, 0.3); color: white; border: 2px solid #66CCFF; padding: 15px 40px; font-size: 24px; border-radius: 50px; cursor: pointer; font-family: 'Orbitron', sans-serif; box-shadow: 0 0 20px rgba(102, 204, 255, 0.5); transition: all 0.3s ease; position: relative;">START MISSION</button>
         </div>
         
         <div id="game-container">
@@ -889,7 +911,7 @@
             </div>
             
             <!-- Game Over screen -->
-            <div id="game-over" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(139, 0, 0, 0.9); color: white; padding: 30px; border-radius: 15px; text-align: center; display: none; z-index: 1000; width: 80%; max-width: 400px; box-shadow: 0 0 30px rgba(255, 0, 0, 0.7); border: 2px solid #ff0000;">
+            <div id="game-over" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(139, 0, 0, 0.95); color: white; padding: 30px; border-radius: 15px; text-align: center; display: none; z-index: 3000; width: 80%; max-width: 400px; box-shadow: 0 0 30px rgba(255, 0, 0, 0.7); border: 2px solid #ff0000; -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);">
                 <h2 style="color: #ff3333; text-shadow: 0 0 10px rgba(255, 0, 0, 0.7); margin-top: 0;">GAME OVER</h2>
                 <p>Your robot was destroyed by enemy forces!</p>
                 <p>Diamonds collected: <span id="finalDiamonds" class="highlight">0</span></p>
