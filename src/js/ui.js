@@ -57,10 +57,6 @@ export function hideEntryScreen() {
         setTimeout(() => {
             entryScreen.style.display = 'none';
             
-            // Make absolutely sure the entry screen is hidden and not interactive
-            entryScreen.style.visibility = 'hidden';
-            entryScreen.style.pointerEvents = 'none';
-            
             // Show the pause button after game starts
             if (pauseBtn) {
                 pauseBtn.style.display = 'flex';
@@ -92,18 +88,8 @@ export function setupEntryScreen(startGameCallback) {
             startGameBtn.style.transform = 'scale(1.05)';
         });
         
-        // Remove any existing click listeners to prevent duplicates
-        const newStartBtn = startGameBtn.cloneNode(true);
-        startGameBtn.parentNode.replaceChild(newStartBtn, startGameBtn);
-        startGameBtn = newStartBtn;
-        
         // Start game when button is clicked
         startGameBtn.addEventListener('click', () => {
-            // Immediately disable the button to prevent multiple clicks
-            startGameBtn.disabled = true;
-            startGameBtn.style.pointerEvents = 'none';
-            startGameBtn.style.opacity = '0.5';
-            
             hideEntryScreen();
             
             // Add a slight delay before starting the game
@@ -388,20 +374,7 @@ export function hideGameOver() {
 
 // Restart game from game over
 function restartGame() {
-    // First hide the game over screen
     hideGameOver();
-    
-    // Make sure entry screen stays hidden when restarting
-    const entryScreen = document.getElementById('entry-screen');
-    if (entryScreen) {
-        entryScreen.style.display = 'none';
-        entryScreen.style.visibility = 'hidden';
-        entryScreen.style.opacity = '0';
-        entryScreen.style.pointerEvents = 'none';
-    }
-    
     // Call the startGame function from main.js
-    setTimeout(() => {
-        window.startGame();
-    }, 200);
+    window.startGame();
 } 
