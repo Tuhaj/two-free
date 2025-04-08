@@ -229,30 +229,34 @@
         }
         
         .control-btn {
-            background: rgba(102, 204, 255, 0.3);
-            border: 2px solid #66CCFF;
+            width: 65px;
+            height: 65px;
+            margin: 5px;
+            background: rgba(0, 10, 20, 0.7);
+            border: 2px solid rgba(102, 204, 255, 0.3);
             border-radius: 50%;
-            width: 60px;
-            height: 60px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            font-size: 24px;
-            font-weight: bold;
-            user-select: none;
+            justify-content: center;
             color: white;
-            box-shadow: 0 0 10px rgba(102, 204, 255, 0.5);
-            transition: all 0.2s;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 15px rgba(102, 204, 255, 0.2);
         }
         
         .control-btn:active {
-            background: rgba(102, 204, 255, 0.6);
-            transform: scale(0.95);
+            background: rgba(102, 204, 255, 0.2);
+            border-color: rgba(102, 204, 255, 0.5);
+            box-shadow: 0 0 20px rgba(102, 204, 255, 0.4);
         }
         
-        .control-btn.large {
-            width: 80px;
-            height: 80px;
+        .btn-icon {
+            font-size: 28px;
+            line-height: 1;
         }
         
         #pauseBtn {
@@ -541,7 +545,6 @@
                 width: 65px;
                 height: 65px;
                 margin: 5px;
-                border-width: 2px;
             }
             
             .btn-icon {
@@ -1268,7 +1271,7 @@
                 
                 // Add both click and touch events
                 pauseBtn.addEventListener('click', handlePause);
-                pauseBtn.addEventListener('touchend', handlePause);
+                pauseBtn.addEventListener('touchend', handlePause, { passive: false });
             }
             
             // Use localStorage to remember user's layout preference
@@ -1360,9 +1363,11 @@
                     // Set up alternative buttons to mirror primary button events
                     for (let i = 1; i < btns.length; i++) {
                         if (btns[i]) {
-                            ['touchstart', 'touchend', 'mousedown', 'mouseup', 'mouseleave'].forEach(eventType => {
-                                btns[i].addEventListener(eventType, () => mirrorTouch(primaryBtn, eventType));
-                            });
+                            btns[i].addEventListener('touchstart', () => mirrorTouch(primaryBtn, 'touchstart'), { passive: true });
+                            btns[i].addEventListener('touchend', () => mirrorTouch(primaryBtn, 'touchend'), { passive: true });
+                            btns[i].addEventListener('mousedown', () => mirrorTouch(primaryBtn, 'mousedown'));
+                            btns[i].addEventListener('mouseup', () => mirrorTouch(primaryBtn, 'mouseup'));
+                            btns[i].addEventListener('mouseleave', () => mirrorTouch(primaryBtn, 'mouseleave'));
                         }
                     }
                 }

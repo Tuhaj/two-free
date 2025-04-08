@@ -101,52 +101,52 @@ function setupTouchControls(togglePauseCallback) {
     // Prevent default touch behaviors on the control buttons
     const controlButtons = document.querySelectorAll('.control-btn');
     controlButtons.forEach(btn => {
-        btn.addEventListener('touchstart', e => e.preventDefault());
-        btn.addEventListener('touchend', e => e.preventDefault());
-        btn.addEventListener('touchmove', e => e.preventDefault());
+        btn.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+        btn.addEventListener('touchend', e => e.preventDefault(), { passive: false });
+        btn.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
     });
     
     // Left button
     leftBtn.addEventListener('touchstart', () => {
         touchControls.left = true;
         touchControls.lastLeftTouch = Date.now();
-    });
+    }, { passive: true });
     leftBtn.addEventListener('touchend', () => {
         touchControls.left = false;
-    });
+    }, { passive: true });
     
     // Right button
     rightBtn.addEventListener('touchstart', () => {
         touchControls.right = true;
         touchControls.lastRightTouch = Date.now();
-    });
+    }, { passive: true });
     rightBtn.addEventListener('touchend', () => {
         touchControls.right = false;
-    });
+    }, { passive: true });
     
     // Jump button
     jumpBtn.addEventListener('touchstart', () => {
         touchControls.jump = true;
-    });
+    }, { passive: true });
     jumpBtn.addEventListener('touchend', () => {
         touchControls.jump = false;
-    });
+    }, { passive: true });
     
     // Dig button
     digBtn.addEventListener('touchstart', () => {
         touchControls.dig = true;
-    });
+    }, { passive: true });
     digBtn.addEventListener('touchend', () => {
         touchControls.dig = false;
-    });
+    }, { passive: true });
     
     // Shoot button
     shootBtn.addEventListener('touchstart', () => {
         touchControls.shoot = true;
-    });
+    }, { passive: true });
     shootBtn.addEventListener('touchend', () => {
         touchControls.shoot = false;
-    });
+    }, { passive: true });
     
     // Pause button
     pauseBtn.addEventListener('click', (e) => {
