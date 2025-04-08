@@ -481,7 +481,6 @@
         /* Tablet controls specific styling */
         #tablet-layout {
             position: relative;
-            width: 100%;
             display: flex;
             justify-content: space-between;
             padding: 10px 20px;
@@ -501,28 +500,36 @@
             gap: 20px;
             justify-content: flex-end;
         }
+
+        /* Center control group for tablet layout */
+        .control-group.center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        /* Style for the shoot button in tablet layout */
+        #tablet-layout .shoot-btn {
+            background: rgba(255, 215, 0, 0.3) !important;
+            border: 3px solid #FFD700 !important;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.7) !important;
+        }
+
+        #tablet-layout .shoot-btn:active {
+            background: rgba(255, 215, 0, 0.5) !important;
+            transform: scale(0.95);
+        }
         
         /* Phone-specific adjustments */
         @media (max-width: 480px) {
-            /* Create a control bar at the bottom */
-            #touch-controls {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: rgba(0, 10, 20, 0.7);
-                padding: 10px;
-                border-top: 1px solid rgba(102, 204, 255, 0.3);
-                box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
-                display: block !important;
-            }
-            
-            /* Adjust the tablet layout for phones */
             #tablet-layout {
-                padding: 5px;
-                max-width: 100%;
-                margin: 0 auto;
                 display: flex !important;
+                justify-content: space-between;
+                padding: 0 10px;
             }
             
             /* Hide other layouts */
@@ -530,28 +537,31 @@
                 display: none !important;
             }
             
-            .tablet-controls-left, .tablet-controls-right {
-                gap: 10px;
-            }
-            
-            /* Make buttons slightly smaller but keep good tap targets */
             .control-btn {
-                width: 60px;
-                height: 60px;
-                margin: 0;
-            }
-            
-            .control-btn.large {
-                width: 70px;
-                height: 70px;
+                width: 65px;
+                height: 65px;
+                margin: 5px;
+                border-width: 2px;
             }
             
             .btn-icon {
-                font-size: 26px;
+                font-size: 28px;
             }
             
+            /* Remove the label spacing since we're not showing labels */
             .btn-label {
-                font-size: 11px;
+                display: none;
+            }
+            
+            /* Make all buttons the same size */
+            .control-btn.large {
+                width: 65px;
+                height: 65px;
+            }
+            
+            /* Clean up control bar */
+            #touch-controls {
+                padding: 10px 5px;
             }
             
             /* Make canvas use more vertical space but leave room for controls */
@@ -597,13 +607,18 @@
         
         /* Medium-small phones (430px and below) */
         @media (max-width: 430px) {
-            /* Create a more compact control layout */
-            #touch-controls {
-                padding: 5px 0;
+            .control-btn, .control-btn.large {
+                width: 60px;
+                height: 60px;
+                margin: 3px;
             }
             
-            #tablet-layout {
-                padding: 2px 0;
+            .btn-icon {
+                font-size: 26px;
+            }
+            
+            #touch-controls {
+                padding: 8px 3px;
             }
             
             .tablet-controls-left, .tablet-controls-right {
@@ -625,11 +640,6 @@
             
             .btn-icon {
                 font-size: 22px;
-            }
-            
-            .btn-label {
-                font-size: 10px;
-                margin-top: 1px;
             }
             
             /* Adjust UI for smaller screens */
@@ -658,13 +668,18 @@
         
         /* Smaller phones (390px and below) */
         @media (max-width: 390px) {
-            /* Create a more compact control layout */
-            #touch-controls {
-                padding: 5px 0 !important;
+            .control-btn, .control-btn.large {
+                width: 55px;
+                height: 55px;
+                margin: 2px;
             }
             
-            #tablet-layout {
-                padding: 0;
+            .btn-icon {
+                font-size: 24px;
+            }
+            
+            #touch-controls {
+                padding: 5px 2px;
             }
             
             .tablet-controls-left, .tablet-controls-right {
@@ -750,6 +765,24 @@
         
         /* Extra small screen adjustments (less than 320px) */
         @media (max-width: 320px) {
+            .control-btn, .control-btn.large {
+                width: 50px;
+                height: 50px;
+                margin: 2px;
+            }
+            
+            .btn-icon {
+                font-size: 22px;
+            }
+            
+            #touch-controls {
+                padding: 3px 1px;
+            }
+            
+            .tablet-controls-left, .tablet-controls-right {
+                gap: 3px;
+            }
+            
             /* Adjust layout for tiny screens */
             #tablet-layout {
                 padding: 5px 0;
@@ -893,6 +926,74 @@
         .shoot-btn:active {
             background: rgba(0, 255, 255, 0.5) !important;
         }
+        
+        /* Mobile controls */
+        #mobileControls {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            justify-content: space-between;
+            padding: 0 20px;
+            pointer-events: none;
+            touch-action: none;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
+        }
+        
+        .control-group.center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .mobile-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        
+        .mobile-button:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .mobile-button.fire {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: rgba(255, 215, 0, 0.4);
+        }
+        
+        .mobile-button.fire:active {
+            background: rgba(255, 215, 0, 0.3);
+        }
+        
+        @media (max-width: 1024px) {
+            #mobileControls {
+                display: flex;
+            }
+        }
     </style>
 </head>
 <body>
@@ -990,15 +1091,12 @@
                         </div>
                         <div id="digBtn" class="control-btn dig-btn" role="button" aria-label="Dig">
                             <span class="btn-icon">↓</span>
-                            <span class="btn-label">DIG</span>
                         </div>
-                        <div id="jumpBtn" class="control-btn large" role="button" aria-label="Jump">
+                        <div id="jumpBtn" class="control-btn" role="button" aria-label="Jump">
                             <span class="btn-icon">↑</span>
-                            <span class="btn-label">JUMP</span>
                         </div>
                         <div id="shootBtn" class="control-btn shoot-btn" role="button" aria-label="Shoot">
                             <span class="btn-icon">⚡</span>
-                            <span class="btn-label">SHOOT</span>
                         </div>
                     </div>
                 </div>
@@ -1013,14 +1111,17 @@
                             <span class="btn-icon">→</span>
                         </div>
                     </div>
-                    <div class="tablet-controls-right">
-                        <div id="digBtn-alt" class="control-btn dig-btn large" role="button" aria-label="Dig">
-                            <span class="btn-icon">↓</span>
-                            <span class="btn-label">DIG</span>
+                    <div class="control-group center">
+                        <div id="shootBtn-alt" class="control-btn shoot-btn" role="button" aria-label="Shoot">
+                            <span class="btn-icon">⚡</span>
                         </div>
-                        <div id="jumpBtn-alt" class="control-btn large" role="button" aria-label="Jump">
+                    </div>
+                    <div class="tablet-controls-right">
+                        <div id="digBtn-alt" class="control-btn dig-btn" role="button" aria-label="Dig">
+                            <span class="btn-icon">↓</span>
+                        </div>
+                        <div id="jumpBtn-alt" class="control-btn" role="button" aria-label="Jump">
                             <span class="btn-icon">↑</span>
-                            <span class="btn-label">JUMP</span>
                         </div>
                     </div>
                 </div>
@@ -1036,8 +1137,8 @@
                         </div>
                         <div id="digBtn-left" class="control-btn dig-btn" role="button" aria-label="Dig">
                             <span class="btn-icon">↓</span>
-                            <span class="btn-label">DIG</span>
                         </div>
+                        <div id="jumpBtn-left" class="control-btn" role="button" aria-label="Jump">
                         <div id="jumpBtn-left" class="control-btn large" role="button" aria-label="Jump">
                             <span class="btn-icon">↑</span>
                             <span class="btn-label">JUMP</span>
@@ -1157,12 +1258,17 @@
             
             // Set up pause button functionality
             if (pauseBtn) {
-                pauseBtn.addEventListener('click', function() {
+                const handlePause = function(e) {
+                    e.preventDefault(); // Prevent any default behavior
                     // Ensure the window.togglePause exists before calling it
                     if (typeof window.togglePause === 'function') {
                         window.togglePause();
                     }
-                });
+                };
+                
+                // Add both click and touch events
+                pauseBtn.addEventListener('click', handlePause);
+                pauseBtn.addEventListener('touchend', handlePause);
             }
             
             // Use localStorage to remember user's layout preference

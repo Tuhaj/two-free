@@ -99,9 +99,9 @@ export function updatePlayer(player, world, worldWidth, worldHeight, keys, touch
     }
     
     // Handle jumping
-    if ((keys['ArrowUp'] || keys['w'] || keys[' '] || touchControls.jump) && !player.isJumping) {
+    player.isJumping = keys['ArrowUp'] || keys['w'] || keys[' '] || touchControls.jump;
+    if (player.isJumping) {
         player.velocityY = JUMP_FORCE;
-        player.isJumping = true;
         
         // Play jump sound
         playSound('jump');
@@ -420,35 +420,29 @@ function createShot(player) {
         active: true
     };
     
-    console.log('Created new shot:', {
-        position: { x: shot.x, y: shot.y },
-        size: shot.size,
-        velocity: { x: shot.velocityX, y: shot.velocityY }
-    });
-    
     return shot;
 }
 
-// Function to handle shooting
+// Handle shooting
 function handleShooting(player, keys, touchControls) {
     const now = Date.now();
-    const shootPressed = keys.f || touchControls.shoot;
-    
-    if (shootPressed && now - lastShotTime >= SHOT_COOLDOWN && player.energy >= SHOT_ENERGY_COST) {
+    // Check if enough time has passed since last shot and player has enough energy
+    if ((keys.f || touchControls.shoot) && 
+        now - lastShotTime > SHOT_COOLDOWN && 
+        player.energy >= SHOT_ENERGY_COST) {
+        
         // Create new shot
         const shot = createShot(player);
         projectiles.push(shot);
         
-        // Consume energy
+        // Reduce player energy
         player.energy -= SHOT_ENERGY_COST;
         
-        // Update cooldown
+        // Update last shot time
         lastShotTime = now;
         
-        // Play shooting sound
-        if (window.playSound) {
-            window.playSound('shoot', 0.3);
-        }
+        // Play shoot sound
+        playSound('shoot', 0.3);
     }
 }
 
@@ -462,7 +456,6 @@ function updateProjectiles(world, worldWidth, worldHeight, enemies) {
         // Check for collision with world boundaries
         if (shot.x < 0 || shot.x > worldWidth * TILE_SIZE || 
             shot.y < 0 || shot.y > worldHeight * TILE_SIZE) {
-            console.log('Shot out of bounds:', shot);
             return false;
         }
         
@@ -472,15 +465,7 @@ function updateProjectiles(world, worldWidth, worldHeight, enemies) {
                 // Skip invalid or dead enemies
                 if (!enemy || enemy.isDead || !enemy.active) continue;
                 
-                // Debug enemy check
-                console.log('Checking enemy collision:', {
-                    shot: { x: shot.x, y: shot.y },
-                    enemy: { x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height }
-                });
-                
                 if (checkShotEnemyCollision(shot, enemy)) {
-                    console.log('Hit enemy:', enemy);
-                    
                     // Instantly kill the enemy
                     enemy.active = false;
                     enemy.health = 0;
@@ -503,62 +488,21 @@ function updateProjectiles(world, worldWidth, worldHeight, enemies) {
 
 // Function to check collision between shot and enemy
 function checkShotEnemyCollision(shot, enemy) {
-    // Debug enemy properties
-    console.log('Enemy full object:', {
-        x: enemy.x,
-        y: enemy.y,
-        width: enemy.width,
-        height: enemy.height,
-        active: enemy.active,
-        health: enemy.health
-    });
-
     // Ensure enemy has valid dimensions and position
     if (typeof enemy.x !== 'number' || typeof enemy.y !== 'number') {
-        console.error('Enemy has invalid position:', enemy);
         return false;
     }
 
     if (!enemy.width || !enemy.height) {
-        console.log('Enemy missing dimensions, using default TILE_SIZE');
         enemy.width = TILE_SIZE;
         enemy.height = TILE_SIZE;
     }
 
-    // Debug collision box
-    const shotBox = {
-        left: shot.x,
-        right: shot.x + shot.size,
-        top: shot.y,
-        bottom: shot.y + shot.size
-    };
-    
-    const enemyBox = {
-        left: enemy.x,
-        right: enemy.x + enemy.width,
-        top: enemy.y,
-        bottom: enemy.y + enemy.height
-    };
-
-    console.log('Shot box:', shotBox);
-    console.log('Enemy box:', enemyBox);
-
-    // Check each collision condition separately for debugging
+    // Check each collision condition
     const overlapX = shot.x < enemy.x + enemy.width && shot.x + shot.size > enemy.x;
     const overlapY = shot.y < enemy.y + enemy.height && shot.y + shot.size > enemy.y;
     
-    console.log('Overlap X:', overlapX);
-    console.log('Overlap Y:', overlapY);
-
-    const collision = overlapX && overlapY;
-           
-    console.log('Collision detected:', collision);
-    
-    if (collision) {
-        console.log('HIT! Shot and enemy collision boxes overlapped!');
-    }
-    
-    return collision;
+    return overlapX && overlapY;
 }
 
 // Export projectiles for rendering

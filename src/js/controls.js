@@ -16,6 +16,7 @@ export const touchControls = {
     jump: false,
     dig: false,
     shoot: false,
+    fire: false,
     lastLeftTouch: 0,
     lastRightTouch: 0
 };
@@ -40,6 +41,7 @@ export function setupControls(togglePauseCallback) {
     touchControls.jump = false;
     touchControls.dig = false;
     touchControls.shoot = false;
+    touchControls.fire = false;
     
     // Add keyboard event listeners
     window.addEventListener('keydown', e => keys[e.key] = true);
