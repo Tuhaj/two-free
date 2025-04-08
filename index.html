@@ -1194,9 +1194,16 @@
             const entryScreen = document.getElementById('entry-screen');
             const startBtn = document.getElementById('start-game-btn');
             
+            // Function to check if device has touch capability
+            function isTouchDevice() {
+                return (('ontouchstart' in window) ||
+                       (navigator.maxTouchPoints > 0) ||
+                       (navigator.msMaxTouchPoints > 0));
+            }
+            
             // Special handling for extremely narrow screens
             function handleExtremelyNarrowScreens() {
-                if (window.innerWidth <= 430) {
+                if (window.innerWidth <= 430 && isTouchDevice()) {
                     // Force styles for very narrow screens
                     touchControls.style.padding = '0';
                     const leftButtons = document.querySelectorAll('.control-btn');
@@ -1213,40 +1220,11 @@
                         btn.style.width = '65px';
                         btn.style.height = '65px';
                     });
-                    
-                    // Even more compact for truly tiny screens
-                    if (window.innerWidth <= 390) {
-                        leftButtons.forEach(btn => {
-                            btn.style.width = '50px';
-                            btn.style.height = '50px';
-                            btn.style.margin = '1px';
-                        });
-                        
-                        largeButtons.forEach(btn => {
-                            btn.style.width = '58px';
-                            btn.style.height = '58px';
-                        });
-                    }
-                    
-                    // Super compact for extremely small screens
-                    if (window.innerWidth <= 240) {
-                        leftButtons.forEach(btn => {
-                            btn.style.width = '40px';
-                            btn.style.height = '40px';
-                            btn.style.margin = '0';
-                            btn.style.borderWidth = '1px';
-                        });
-                        
-                        largeButtons.forEach(btn => {
-                            btn.style.width = '45px';
-                            btn.style.height = '45px';
-                        });
-                    }
                 }
             }
             
-            // Make sure touch controls are visible on mobile devices
-            if (window.innerWidth <= 800 || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)) {
+            // Make sure touch controls are visible only on touch devices
+            if (isTouchDevice()) {
                 touchControls.style.display = 'block';
                 
                 // Fix mobile start button visibility
@@ -1257,21 +1235,24 @@
                 
                 // Check for extremely narrow screens
                 handleExtremelyNarrowScreens();
+            } else {
+                // Hide touch controls on non-touch devices
+                touchControls.style.display = 'none';
             }
             
             // Set up pause button functionality
             if (pauseBtn) {
                 const handlePause = function(e) {
                     e.preventDefault(); // Prevent any default behavior
-                    // Ensure the window.togglePause exists before calling it
                     if (typeof window.togglePause === 'function') {
                         window.togglePause();
                     }
                 };
                 
-                // Add both click and touch events
                 pauseBtn.addEventListener('click', handlePause);
-                pauseBtn.addEventListener('touchend', handlePause, { passive: false });
+                if (isTouchDevice()) {
+                    pauseBtn.addEventListener('touchend', handlePause, { passive: false });
+                }
             }
             
             // Use localStorage to remember user's layout preference
@@ -1279,52 +1260,56 @@
             
             // Set layout based on saved preference or device
             function setLayout() {
-                // Check device type based on screen size
-                const isPhone = window.innerWidth < 480;
-                const isTablet = window.innerWidth >= 480 && window.innerWidth <= 1024;
-                
-                // For phones, force tablet layout as it works better
-                if (isPhone) {
-                    savedLayout = 'tablet';
-                    localStorage.setItem('controlLayout', 'tablet');
+                // Only proceed with touch layout if it's a touch device
+                if (isTouchDevice()) {
+                    // Check device type based on screen size
+                    const isPhone = window.innerWidth < 480;
+                    const isTablet = window.innerWidth >= 480 && window.innerWidth <= 1024;
+                    
+                    // For phones, force tablet layout as it works better
+                    if (isPhone) {
+                        savedLayout = 'tablet';
+                        localStorage.setItem('controlLayout', 'tablet');
+                    }
+                    // If device is tablet and no preference saved, set tablet layout as default
+                    else if (isTablet && !savedLayout) {
+                        savedLayout = 'tablet';
+                        localStorage.setItem('controlLayout', 'tablet');
+                    }
+                    
+                    // If no preference set, default to standard
+                    if (!savedLayout) {
+                        savedLayout = 'standard';
+                        localStorage.setItem('controlLayout', 'standard');
+                    }
+                    
+                    // Apply the layout
+                    standardLayout.style.display = 'none';
+                    tabletLayout.style.display = 'none';
+                    leftyLayout.style.display = 'none';
+                    
+                    if (savedLayout === 'standard') {
+                        standardLayout.style.display = 'block';
+                    } else if (savedLayout === 'tablet') {
+                        tabletLayout.style.display = 'flex';
+                    } else if (savedLayout === 'lefty') {
+                        leftyLayout.style.display = 'block';
+                    }
+                    
+                    // For phones, always use tablet layout
+                    if (isPhone) {
+                        tabletLayout.style.display = 'flex';
+                    }
+                    
+                    // Handle extremely narrow screens
+                    handleExtremelyNarrowScreens();
+                } else {
+                    // Hide all touch control layouts on non-touch devices
+                    touchControls.style.display = 'none';
+                    standardLayout.style.display = 'none';
+                    tabletLayout.style.display = 'none';
+                    leftyLayout.style.display = 'none';
                 }
-                // If device is tablet and no preference saved, set tablet layout as default
-                else if (isTablet && !savedLayout) {
-                    savedLayout = 'tablet';
-                    localStorage.setItem('controlLayout', 'tablet');
-                }
-                
-                // If no preference set, default to standard
-                if (!savedLayout) {
-                    savedLayout = 'standard';
-                    localStorage.setItem('controlLayout', 'standard');
-                }
-                
-                // Apply the layout
-                standardLayout.style.display = 'none';
-                tabletLayout.style.display = 'none';
-                leftyLayout.style.display = 'none';
-                
-                if (savedLayout === 'standard') {
-                    standardLayout.style.display = 'block';
-                } else if (savedLayout === 'tablet') {
-                    tabletLayout.style.display = 'flex';
-                } else if (savedLayout === 'lefty') {
-                    leftyLayout.style.display = 'block';
-                }
-                
-                // Make sure touch controls are always visible on mobile
-                if (window.innerWidth <= 800 || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)) {
-                    touchControls.style.display = 'block';
-                }
-                
-                // For phones, always use tablet layout
-                if (isPhone) {
-                    tabletLayout.style.display = 'flex';
-                }
-                
-                // Handle extremely narrow screens
-                handleExtremelyNarrowScreens();
             }
             
             setLayout();
