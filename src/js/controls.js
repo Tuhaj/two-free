@@ -62,6 +62,27 @@ export function setupControls(togglePauseCallback) {
             togglePauseCallback();
         }
     });
+    
+    // Set up pause button click handler
+    if (pauseBtn) {
+        // Remove any existing listeners
+        const newPauseBtn = pauseBtn.cloneNode(true);
+        pauseBtn.parentNode.replaceChild(newPauseBtn, pauseBtn);
+        pauseBtn = newPauseBtn;
+        
+        // Add click handler for mouse
+        pauseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            togglePauseCallback();
+        });
+        
+        // Add touch handler for mobile
+        pauseBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            togglePauseCallback();
+        });
+    }
 }
 
 // Setup touch controls

@@ -52,14 +52,22 @@ export function hideEntryScreen() {
         // Add fade out transition
         entryScreen.style.opacity = '0';
         entryScreen.style.transition = 'opacity 0.8s ease';
+        entryScreen.style.pointerEvents = 'none'; // Disable interactions immediately
         
         // Remove from DOM after transition
         setTimeout(() => {
             entryScreen.style.display = 'none';
+            entryScreen.style.visibility = 'hidden'; // Ensure it's completely hidden
             
             // Show the pause button after game starts
             if (pauseBtn) {
                 pauseBtn.style.display = 'flex';
+            }
+            
+            // Make sure start button is hidden
+            if (startGameBtn) {
+                startGameBtn.style.display = 'none';
+                startGameBtn.style.visibility = 'hidden';
             }
         }, 800);
     }

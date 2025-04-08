@@ -99,6 +99,12 @@ function startGame() {
     updateDiamondDisplay(totalDiamonds);
     updatePauseButtonAppearance(gamePaused);
     
+    // Show the pause button
+    const pauseBtn = document.getElementById(DOM_IDS.PAUSE_BTN);
+    if (pauseBtn) {
+        pauseBtn.style.display = 'flex';
+    }
+    
     // Start game loop
     lastTimestamp = 0;
     requestAnimationFrame(gameLoop);
@@ -347,11 +353,8 @@ window.onload = function() {
     setupAudio();
     setupSoundButton();
     
-    // Set up entry screen listeners
-    setupEntryScreen(() => {
-        // Show entry screen
-        showEntryScreen();
-    }, startGame);
+    // Initialize game
+    init();
     
     // Handle window resize
     window.addEventListener('resize', () => handleResize(canvas));

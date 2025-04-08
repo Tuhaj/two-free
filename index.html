@@ -78,7 +78,6 @@
         #game-wrapper {
             position: relative;
             border-radius: 20px;
-            overflow: hidden;
             box-shadow: 0 0 40px rgba(0, 100, 255, 0.4);
             border: 2px solid #4a6d8c;
         }
@@ -87,6 +86,7 @@
             display: block;
             max-width: 100%;
             max-height: 80vh;
+            border-radius: 20px;
         }
         
         /* Fix canvas size for mobile */
@@ -101,6 +101,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            pointer-events: none;
+        }
+        
+        #game-container > * {
+            pointer-events: auto;
         }
         
         /* Add space for controls below canvas */
@@ -251,18 +256,54 @@
         }
         
         #pauseBtn {
-            transition: all 0.2s;
-            box-shadow: 0 0 10px rgba(102, 204, 255, 0.5);
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(102, 204, 255, 0.4);
+            border: 2px solid #66CCFF;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            z-index: 2500;
+            box-shadow: 0 0 15px rgba(102, 204, 255, 0.5);
+            -webkit-tap-highlight-color: transparent;
+            pointer-events: auto;
         }
         
         #pauseBtn:hover {
-            background: rgba(102, 204, 255, 0.5);
+            background: rgba(102, 204, 255, 0.6);
             transform: scale(1.05);
         }
         
         #pauseBtn:active {
-            background: rgba(102, 204, 255, 0.6);
+            background: rgba(102, 204, 255, 0.7);
             transform: scale(0.95);
+        }
+        
+        #soundBtn {
+            position: absolute;
+            top: 15px;
+            right: 75px;
+            background: rgba(102, 204, 255, 0.4);
+            border: 2px solid #66CCFF;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            z-index: 2500;
+            box-shadow: 0 0 15px rgba(102, 204, 255, 0.5);
+            -webkit-tap-highlight-color: transparent;
         }
         
         @media (max-width: 800px) or (pointer: coarse) {
@@ -887,6 +928,10 @@
         <div id="game-container">
             <canvas id="gameCanvas" width="800" height="600"></canvas>
             
+            <!-- Pause and Sound buttons -->
+            <div id="pauseBtn" role="button" aria-label="Pause game" tabindex="0">⏸️</div>
+            <div id="soundBtn" role="button" aria-label="Toggle sound" tabindex="0">🔊</div>
+            
             <div id="ui">
                 <div class="stat-item">
                     <div class="stat-icon">⚡</div>
@@ -921,12 +966,6 @@
             
             <!-- Achievement notification area -->
             <div id="achievements" style="position: absolute; top: 60px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 1000;"></div>
-            
-            <!-- Pause button that's always visible -->
-            <div id="pauseBtn" role="button" aria-label="Pause game" tabindex="0" style="position: fixed; top: 15px; right: 15px; background: rgba(102, 204, 255, 0.4); border: 2px solid #66CCFF; border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 24px; color: white; cursor: pointer; z-index: 2500; box-shadow: 0 0 15px rgba(102, 204, 255, 0.5); -webkit-tap-highlight-color: transparent;">⏸️</div>
-            
-            <!-- Sound toggle button -->
-            <div id="soundBtn" role="button" aria-label="Toggle sound" tabindex="0" style="position: fixed; top: 15px; right: 75px; background: rgba(102, 204, 255, 0.4); border: 2px solid #66CCFF; border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 24px; color: white; cursor: pointer; z-index: 2500; box-shadow: 0 0 15px rgba(102, 204, 255, 0.5); -webkit-tap-highlight-color: transparent;">🔊</div>
             
             <div id="touch-controls" role="group" aria-label="Game controls">
                 <!-- Standard layout (default) -->
