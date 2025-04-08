@@ -2,6 +2,7 @@
 let audioContext;
 let sounds = {};
 let isMuted = false;
+let backgroundMusic = null;
 
 // Initialize audio context
 function initAudio() {
@@ -12,6 +13,9 @@ function initAudio() {
             
             // Load all sound effects
             loadSounds();
+            
+            // Load and start background music
+            loadBackgroundMusic();
             
             console.log("Audio context initialized");
         } catch (e) {
@@ -35,6 +39,45 @@ async function loadSounds() {
         console.log("All sounds loaded");
     } catch (e) {
         console.error("Error loading sounds:", e);
+    }
+}
+
+// Load and play background music
+async function loadBackgroundMusic() {
+    try {
+        const response = await fetch('./public/audio/game-music.midi');
+        const arrayBuffer = await response.arrayBuffer();
+        
+        if ('requestMIDIAccess' in navigator) {
+            const midiAccess = await navigator.requestMIDIAccess();
+            const synth = new WebMidi.MIDIAccess();
+            
+            backgroundMusic = await audioContext.decodeAudioData(arrayBuffer);
+            const source = audioContext.createBufferSource();
+            source.buffer = backgroundMusic;
+            source.loop = true;
+            
+            // Create gain node for volume control
+            const gainNode = audioContext.createGain();
+            gainNode.gain.value = 0.5; // Set initial volume to 50%
+            
+            // Connect nodes
+            source.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Start playback
+            source.start(0);
+            
+            // Store reference for muting
+            backgroundMusic = {
+                source: source,
+                gainNode: gainNode
+            };
+        } else {
+            console.log("Web MIDI API not supported in this browser");
+        }
+    } catch (e) {
+        console.error("Error loading background music:", e);
     }
 }
 
@@ -90,12 +133,24 @@ export function playSound(name, volume = 1.0, rate = 1.0, pan = 0) {
 // Toggle mute state
 export function toggleMute() {
     isMuted = !isMuted;
+    
+    // Also mute/unmute background music if it exists
+    if (backgroundMusic && backgroundMusic.gainNode) {
+        backgroundMusic.gainNode.gain.value = isMuted ? 0 : 0.5;
+    }
+    
     return isMuted;
 }
 
 // Set mute state
 export function setMute(state) {
     isMuted = state;
+    
+    // Also mute/unmute background music if it exists
+    if (backgroundMusic && backgroundMusic.gainNode) {
+        backgroundMusic.gainNode.gain.value = isMuted ? 0 : 0.5;
+    }
+    
     return isMuted;
 }
 
