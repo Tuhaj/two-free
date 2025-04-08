@@ -3,6 +3,7 @@ let audioContext;
 let sounds = {};
 let isMuted = false;
 let backgroundMusic = null;
+let midiPlayer = null;
 
 // Initialize audio context
 function initAudio() {
@@ -14,13 +15,63 @@ function initAudio() {
             // Load all sound effects
             loadSounds();
             
-            // Load and start background music
-            loadBackgroundMusic();
+            // Initialize Tone.js and load background music
+            initBackgroundMusic();
             
             console.log("Audio context initialized");
         } catch (e) {
             console.error("Error initializing audio context:", e);
         }
+    }
+}
+
+// Initialize background music with Tone.js
+async function initBackgroundMusic() {
+    try {
+        // Create a synth for MIDI playback
+        const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+        synth.volume.value = -12; // Reduce volume to not overpower sound effects
+        
+        // Create a simple repeating melody for background music
+        const melody = new Tone.Sequence((time, note) => {
+            synth.triggerAttackRelease(note, "8n", time);
+        }, [
+            "C4", "E4", "G4", "B4",
+            "C5", "B4", "G4", "E4",
+            "A4", "C5", "E5", "D5",
+            "B4", "G4", "E4", "C4"
+        ], "4n");
+
+        // Store reference for muting
+        backgroundMusic = {
+            synth: synth,
+            melody: melody,
+            play: () => {
+                if (!isMuted) {
+                    Tone.Transport.start();
+                    melody.start();
+                }
+            },
+            pause: () => {
+                melody.stop();
+                Tone.Transport.stop();
+            },
+            setVolume: (vol) => {
+                synth.volume.value = Tone.gainToDb(vol) - 12;
+            }
+        };
+
+        // Set up Tone.js
+        await Tone.start();
+        Tone.Transport.bpm.value = 120;
+        
+        // Start playback if not muted
+        if (!isMuted) {
+            backgroundMusic.play();
+        }
+        
+    } catch (err) {
+        console.error("Could not initialize background music:", err);
     }
 }
 
@@ -39,45 +90,6 @@ async function loadSounds() {
         console.log("All sounds loaded");
     } catch (e) {
         console.error("Error loading sounds:", e);
-    }
-}
-
-// Load and play background music
-async function loadBackgroundMusic() {
-    try {
-        const response = await fetch('./public/audio/game-music.midi');
-        const arrayBuffer = await response.arrayBuffer();
-        
-        if ('requestMIDIAccess' in navigator) {
-            const midiAccess = await navigator.requestMIDIAccess();
-            const synth = new WebMidi.MIDIAccess();
-            
-            backgroundMusic = await audioContext.decodeAudioData(arrayBuffer);
-            const source = audioContext.createBufferSource();
-            source.buffer = backgroundMusic;
-            source.loop = true;
-            
-            // Create gain node for volume control
-            const gainNode = audioContext.createGain();
-            gainNode.gain.value = 0.5; // Set initial volume to 50%
-            
-            // Connect nodes
-            source.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            // Start playback
-            source.start(0);
-            
-            // Store reference for muting
-            backgroundMusic = {
-                source: source,
-                gainNode: gainNode
-            };
-        } else {
-            console.log("Web MIDI API not supported in this browser");
-        }
-    } catch (e) {
-        console.error("Error loading background music:", e);
     }
 }
 
@@ -135,8 +147,12 @@ export function toggleMute() {
     isMuted = !isMuted;
     
     // Also mute/unmute background music if it exists
-    if (backgroundMusic && backgroundMusic.gainNode) {
-        backgroundMusic.gainNode.gain.value = isMuted ? 0 : 0.5;
+    if (backgroundMusic) {
+        if (isMuted) {
+            backgroundMusic.pause();
+        } else {
+            backgroundMusic.play();
+        }
     }
     
     return isMuted;
@@ -147,8 +163,12 @@ export function setMute(state) {
     isMuted = state;
     
     // Also mute/unmute background music if it exists
-    if (backgroundMusic && backgroundMusic.gainNode) {
-        backgroundMusic.gainNode.gain.value = isMuted ? 0 : 0.5;
+    if (backgroundMusic) {
+        if (isMuted) {
+            backgroundMusic.pause();
+        } else {
+            backgroundMusic.play();
+        }
     }
     
     return isMuted;
