@@ -1,5 +1,5 @@
 import { TILE_SIZE, TILE_AIR, TILE_DIRT, TILE_STONE } from './constants.js';
-import { isPlayerHidden } from './player.js';
+import { isPlayerHidden, getProjectiles } from './player.js';
 
 // Module state
 let ctx;
@@ -106,6 +106,11 @@ export function draw(
         // Draw slightly transparent overlay
         ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    // Draw shots
+    if (!gamePaused) {
+        drawShots(ctx);
     }
 }
 
@@ -1279,5 +1284,52 @@ export function createParticle(x, y, vx, vy, size, color, life) {
         size: size,
         color: color,
         life: life
+    });
+}
+
+// Draw electric shots
+function drawShots(ctx) {
+    const projectiles = getProjectiles();
+    
+    projectiles.forEach(shot => {
+        // Create electric effect gradient
+        const gradient = ctx.createLinearGradient(
+            shot.x - shot.size,
+            shot.y - shot.size,
+            shot.x + shot.size,
+            shot.y + shot.size
+        );
+        gradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
+        gradient.addColorStop(0.5, 'rgba(0, 128, 255, 0.9)');
+        gradient.addColorStop(1, 'rgba(0, 64, 255, 0.8)');
+        
+        // Draw the main shot
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(shot.x, shot.y, shot.size, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Add electric effect
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 3; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const length = shot.size * 2;
+            ctx.beginPath();
+            ctx.moveTo(shot.x, shot.y);
+            ctx.lineTo(
+                shot.x + Math.cos(angle) * length,
+                shot.y + Math.sin(angle) * length
+            );
+            ctx.stroke();
+        }
+        
+        // Add glow effect
+        ctx.shadowColor = 'rgba(0, 255, 255, 0.5)';
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.arc(shot.x, shot.y, shot.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
     });
 } 

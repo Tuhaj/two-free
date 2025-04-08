@@ -1,22 +1,24 @@
 import { DOM_IDS } from './constants.js';
 
-// Controls state
+// DOM element references
+let leftBtn;
+let rightBtn;
+let jumpBtn;
+let digBtn;
+let shootBtn;
+let pauseBtn;
+
+// Control states
 export const keys = {};
 export const touchControls = {
     left: false,
     right: false,
     jump: false,
     dig: false,
+    shoot: false,
     lastLeftTouch: 0,
     lastRightTouch: 0
 };
-
-// DOM element references
-let leftBtn;
-let rightBtn;
-let jumpBtn;
-let digBtn;
-let pauseBtn;
 
 // Setup controls
 export function setupControls(togglePauseCallback) {
@@ -25,6 +27,7 @@ export function setupControls(togglePauseCallback) {
     rightBtn = document.getElementById(DOM_IDS.RIGHT_BTN);
     jumpBtn = document.getElementById(DOM_IDS.JUMP_BTN);
     digBtn = document.getElementById(DOM_IDS.DIG_BTN);
+    shootBtn = document.getElementById(DOM_IDS.SHOOT_BTN);
     pauseBtn = document.getElementById(DOM_IDS.PAUSE_BTN);
     
     // Clear any existing control states
@@ -36,6 +39,7 @@ export function setupControls(togglePauseCallback) {
     touchControls.right = false;
     touchControls.jump = false;
     touchControls.dig = false;
+    touchControls.shoot = false;
     
     // Add keyboard event listeners
     window.addEventListener('keydown', e => keys[e.key] = true);
@@ -87,7 +91,7 @@ export function setupControls(togglePauseCallback) {
 
 // Setup touch controls
 function setupTouchControls(togglePauseCallback) {
-    if (!leftBtn || !rightBtn || !jumpBtn || !digBtn || !pauseBtn) {
+    if (!leftBtn || !rightBtn || !jumpBtn || !digBtn || !shootBtn) {
         console.error('Touch control elements not found');
         return;
     }
@@ -134,6 +138,14 @@ function setupTouchControls(togglePauseCallback) {
         touchControls.dig = false;
     });
     
+    // Shoot button
+    shootBtn.addEventListener('touchstart', () => {
+        touchControls.shoot = true;
+    });
+    shootBtn.addEventListener('touchend', () => {
+        touchControls.shoot = false;
+    });
+    
     // Pause button
     pauseBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -169,4 +181,8 @@ function setupTouchControls(togglePauseCallback) {
     digBtn.addEventListener('mousedown', () => touchControls.dig = true);
     digBtn.addEventListener('mouseup', () => touchControls.dig = false);
     digBtn.addEventListener('mouseleave', () => touchControls.dig = false);
+    
+    shootBtn.addEventListener('mousedown', () => touchControls.shoot = true);
+    shootBtn.addEventListener('mouseup', () => touchControls.shoot = false);
+    shootBtn.addEventListener('mouseleave', () => touchControls.shoot = false);
 } 

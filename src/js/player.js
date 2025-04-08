@@ -5,6 +5,16 @@ import { createCollectEffect, createEnemyHitEffect } from './effects.js';
 import { updateEnergyDisplay, updateDiamondDisplay } from './ui.js';
 import { playSound } from './audio.js';
 
+// Add projectiles array to track active shots
+let projectiles = [];
+
+// Constants for shooting
+const SHOT_SPEED = 10;
+const SHOT_ENERGY_COST = 2;
+const SHOT_SIZE = 8;
+const SHOT_COOLDOWN = 250; // milliseconds between shots
+let lastShotTime = 0;
+
 // Create the player object with default state
 export const createPlayer = () => ({
     x: 0,
@@ -19,7 +29,8 @@ export const createPlayer = () => ({
     facingRight: true,
     isDead: false,
     deathTime: 0,
-    deathAnimationComplete: false
+    deathAnimationComplete: false,
+    facingDirection: 1 // 1 for right, -1 for left
 });
 
 // Initialize player at a specific position
@@ -34,6 +45,13 @@ export const initPlayer = (player, x, y) => {
 // Update player state based on input and physics
 export function updatePlayer(player, world, worldWidth, worldHeight, keys, touchControls, treasures, gamePaused, totalDiamonds = 0, enemies = []) {
     if (gamePaused) return { allCollected: false, totalDiamonds };
+    
+    // Update player facing direction based on movement
+    if (keys.ArrowRight || keys.d || touchControls.right) {
+        player.facingRight = true;
+    } else if (keys.ArrowLeft || keys.a || touchControls.left) {
+        player.facingRight = false;
+    }
     
     // Handle horizontal movement - make sure only one direction is active at a time
     let movingLeft = keys['ArrowLeft'] || keys['a'] || touchControls.left;
@@ -68,13 +86,11 @@ export function updatePlayer(player, world, worldWidth, worldHeight, keys, touch
     // Apply movement
     if (movingLeft) {
         player.velocityX = -MOVEMENT_SPEED * (1 + player.energy / 50);
-        player.facingRight = false;
         if (keys['ArrowLeft'] || keys['a']) {
             keys.lastLeftPress = Date.now();
         }
     } else if (movingRight) {
         player.velocityX = MOVEMENT_SPEED * (1 + player.energy / 50);
-        player.facingRight = true;
         if (keys['ArrowRight'] || keys['d']) {
             keys.lastRightPress = Date.now();
         }
@@ -118,6 +134,12 @@ export function updatePlayer(player, world, worldWidth, worldHeight, keys, touch
     
     // Collect treasures
     const collectionResult = collectTreasures(player, treasures, totalDiamonds);
+    
+    // Handle shooting
+    handleShooting(player, keys, touchControls);
+    
+    // Update projectiles
+    updateProjectiles(world, worldWidth, worldHeight, enemies);
     
     return collectionResult;
 }
@@ -385,4 +407,161 @@ export function isPlayerHidden(player, world) {
     }
     
     return false;
+}
+
+// Function to create a new shot
+function createShot(player) {
+    const shot = {
+        x: player.x + player.width / 2,
+        y: player.y + player.height / 2,
+        size: SHOT_SIZE,
+        velocityX: SHOT_SPEED * (player.facingRight ? 1 : -1),
+        velocityY: 0,
+        active: true
+    };
+    
+    console.log('Created new shot:', {
+        position: { x: shot.x, y: shot.y },
+        size: shot.size,
+        velocity: { x: shot.velocityX, y: shot.velocityY }
+    });
+    
+    return shot;
+}
+
+// Function to handle shooting
+function handleShooting(player, keys, touchControls) {
+    const now = Date.now();
+    const shootPressed = keys.f || touchControls.shoot;
+    
+    if (shootPressed && now - lastShotTime >= SHOT_COOLDOWN && player.energy >= SHOT_ENERGY_COST) {
+        // Create new shot
+        const shot = createShot(player);
+        projectiles.push(shot);
+        
+        // Consume energy
+        player.energy -= SHOT_ENERGY_COST;
+        
+        // Update cooldown
+        lastShotTime = now;
+        
+        // Play shooting sound
+        if (window.playSound) {
+            window.playSound('shoot', 0.3);
+        }
+    }
+}
+
+// Function to update projectiles
+function updateProjectiles(world, worldWidth, worldHeight, enemies) {
+    projectiles = projectiles.filter(shot => {
+        // Move the shot
+        shot.x += shot.velocityX;
+        shot.y += shot.velocityY;
+        
+        // Check for collision with world boundaries
+        if (shot.x < 0 || shot.x > worldWidth * TILE_SIZE || 
+            shot.y < 0 || shot.y > worldHeight * TILE_SIZE) {
+            console.log('Shot out of bounds:', shot);
+            return false;
+        }
+        
+        // Check for collision with enemies
+        if (enemies && enemies.length > 0) {
+            for (let enemy of enemies) {
+                // Skip invalid or dead enemies
+                if (!enemy || enemy.isDead || !enemy.active) continue;
+                
+                // Debug enemy check
+                console.log('Checking enemy collision:', {
+                    shot: { x: shot.x, y: shot.y },
+                    enemy: { x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height }
+                });
+                
+                if (checkShotEnemyCollision(shot, enemy)) {
+                    console.log('Hit enemy:', enemy);
+                    
+                    // Instantly kill the enemy
+                    enemy.active = false;
+                    enemy.health = 0;
+                    enemy.isDead = true;
+                    
+                    // Create hit effect at enemy's center
+                    createEnemyHitEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
+                    
+                    // Play hit sound
+                    playSound('enemyHit', 0.5, 1.2);
+                    
+                    return false; // Remove the shot
+                }
+            }
+        }
+        
+        return shot.active;
+    });
+}
+
+// Function to check collision between shot and enemy
+function checkShotEnemyCollision(shot, enemy) {
+    // Debug enemy properties
+    console.log('Enemy full object:', {
+        x: enemy.x,
+        y: enemy.y,
+        width: enemy.width,
+        height: enemy.height,
+        active: enemy.active,
+        health: enemy.health
+    });
+
+    // Ensure enemy has valid dimensions and position
+    if (typeof enemy.x !== 'number' || typeof enemy.y !== 'number') {
+        console.error('Enemy has invalid position:', enemy);
+        return false;
+    }
+
+    if (!enemy.width || !enemy.height) {
+        console.log('Enemy missing dimensions, using default TILE_SIZE');
+        enemy.width = TILE_SIZE;
+        enemy.height = TILE_SIZE;
+    }
+
+    // Debug collision box
+    const shotBox = {
+        left: shot.x,
+        right: shot.x + shot.size,
+        top: shot.y,
+        bottom: shot.y + shot.size
+    };
+    
+    const enemyBox = {
+        left: enemy.x,
+        right: enemy.x + enemy.width,
+        top: enemy.y,
+        bottom: enemy.y + enemy.height
+    };
+
+    console.log('Shot box:', shotBox);
+    console.log('Enemy box:', enemyBox);
+
+    // Check each collision condition separately for debugging
+    const overlapX = shot.x < enemy.x + enemy.width && shot.x + shot.size > enemy.x;
+    const overlapY = shot.y < enemy.y + enemy.height && shot.y + shot.size > enemy.y;
+    
+    console.log('Overlap X:', overlapX);
+    console.log('Overlap Y:', overlapY);
+
+    const collision = overlapX && overlapY;
+           
+    console.log('Collision detected:', collision);
+    
+    if (collision) {
+        console.log('HIT! Shot and enemy collision boxes overlapped!');
+    }
+    
+    return collision;
+}
+
+// Export projectiles for rendering
+export function getProjectiles() {
+    return projectiles;
 } 

@@ -31,7 +31,9 @@ export function createEnemy(x, y) {
         patrolDirection: Math.random() > 0.5 ? 1 : -1, // Random initial direction
         facingRight: Math.random() > 0.5, // Random initial facing
         seesPlayer: false,
-        attackRange: TILE_SIZE * 3 // How close the enemy needs to be to attack
+        attackRange: TILE_SIZE * 3, // How close the enemy needs to be to attack
+        active: true, // Add active flag
+        isDead: false // Add isDead flag
     };
 }
 

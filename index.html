@@ -882,6 +882,17 @@
                 right: 40px;
             }
         }
+        
+        /* Add shoot button styles */
+        .shoot-btn {
+            background: rgba(0, 255, 255, 0.3) !important;
+            border-color: #00ffff !important;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.7) !important;
+        }
+        
+        .shoot-btn:active {
+            background: rgba(0, 255, 255, 0.5) !important;
+        }
     </style>
 </head>
 <body>
@@ -984,6 +995,10 @@
                         <div id="jumpBtn" class="control-btn large" role="button" aria-label="Jump">
                             <span class="btn-icon">↑</span>
                             <span class="btn-label">JUMP</span>
+                        </div>
+                        <div id="shootBtn" class="control-btn shoot-btn" role="button" aria-label="Shoot">
+                            <span class="btn-icon">⚡</span>
+                            <span class="btn-label">SHOOT</span>
                         </div>
                     </div>
                 </div>
@@ -1217,7 +1232,8 @@
                     jump: [document.getElementById('jumpBtn'), document.getElementById('jumpBtn-alt'), document.getElementById('jumpBtn-left')],
                     left: [document.getElementById('rightBtn'), document.getElementById('rightBtn-alt'), document.getElementById('rightBtn-left')],
                     right: [document.getElementById('leftBtn'), document.getElementById('leftBtn-alt'), document.getElementById('leftBtn-left')],
-                    dig: [document.getElementById('digBtn'), document.getElementById('digBtn-alt'), document.getElementById('digBtn-left')]
+                    dig: [document.getElementById('digBtn'), document.getElementById('digBtn-alt'), document.getElementById('digBtn-left')],
+                    shoot: [document.getElementById('shootBtn'), document.getElementById('shootBtn-alt'), document.getElementById('shootBtn-left')]
                 };
                 
                 // Function to dispatch an event to the original button
@@ -1228,7 +1244,7 @@
                     }
                 }
                 
-                // For each control type (jump, left, right, dig)
+                // For each control type (jump, left, right, dig, shoot)
                 for (const [action, btns] of Object.entries(buttons)) {
                     const primaryBtn = btns[0];
                     
