@@ -247,14 +247,15 @@ function gameLoop(timestamp) {
             }
             
             // Handle player death animation completion
-            if (player.isDead && player.deathAnimationComplete) {
+            if (player.isDead && player.deathAnimationComplete && !player.gameOverTriggered) {
                 // Show game over screen
                 showGameOver(totalDiamonds, currentLevel);
                 
-                // Play game over sound
-                playSound('gameOver', 0.8);
+                // Play game over sound with reduced volume
+                playSound('gameOver', 0.3);
                 
-                // Set flag to prevent playing the sound multiple times
+                // Set flag to prevent multiple triggers
+                player.gameOverTriggered = true;
                 player.deathAnimationComplete = false;
                 // We don't pause the game because we want background animations to continue
             }

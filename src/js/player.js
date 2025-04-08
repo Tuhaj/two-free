@@ -30,6 +30,7 @@ export const createPlayer = () => ({
     isDead: false,
     deathTime: 0,
     deathAnimationComplete: false,
+    gameOverTriggered: false,
     facingDirection: 1 // 1 for right, -1 for left
 });
 
@@ -99,9 +100,9 @@ export function updatePlayer(player, world, worldWidth, worldHeight, keys, touch
     }
     
     // Handle jumping
-    player.isJumping = keys['ArrowUp'] || keys['w'] || keys[' '] || touchControls.jump;
-    if (player.isJumping) {
+    if ((keys['ArrowUp'] || keys['w'] || keys[' '] || touchControls.jump) && !player.isJumping) {
         player.velocityY = JUMP_FORCE;
+        player.isJumping = true;
         
         // Play jump sound
         playSound('jump');

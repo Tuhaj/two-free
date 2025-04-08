@@ -155,9 +155,9 @@ function generateEnemyHitSound(ctx) {
     return buffer;
 }
 
-// Generate a powerful explosion sound for game over
+// Generate a clean game over sound
 function generateGameOverSound(ctx) {
-    const duration = 1.5;
+    const duration = 0.4; // Short duration
     const sampleRate = ctx.sampleRate;
     const numSamples = duration * sampleRate;
     const buffer = ctx.createBuffer(1, numSamples, sampleRate);
@@ -165,27 +165,12 @@ function generateGameOverSound(ctx) {
     
     for (let i = 0; i < numSamples; i++) {
         const t = i / sampleRate;
-        const explosion = Math.random() * Math.exp(-t * 3) * 0.8;
-        const rumble = Math.sin(2 * Math.PI * 40 * t) * Math.exp(-t * 2) * 0.6;
-        const highFreq = Math.sin(2 * Math.PI * 800 * t) * Math.exp(-t * 10) * 0.3;
-        
-        data[i] = explosion + rumble + highFreq;
-        
-        // Add crackle effects
-        if (t < 0.5 && Math.random() < 0.1) {
-            data[i] += (Math.random() - 0.5) * Math.exp(-t * 5) * 0.7;
-        }
-        
-        // Secondary explosions
-        if (t > 0.2 && t < 0.4 && Math.random() < 0.05) {
-            data[i] += Math.random() * 0.6;
-        }
-        if (t > 0.5 && t < 0.7 && Math.random() < 0.05) {
-            data[i] += Math.random() * 0.4;
-        }
-        
-        // Limit amplitude to avoid clipping
-        data[i] = Math.max(Math.min(data[i], 0.95), -0.95);
+        // Simple descending tone from 400Hz to 100Hz
+        const frequency = 400 - t * 750;
+        // Smooth amplitude envelope
+        const amplitude = Math.exp(-t * 4) * 0.7;
+        // Clean sine wave
+        data[i] = Math.sin(2 * Math.PI * frequency * t) * amplitude;
     }
     
     return buffer;
