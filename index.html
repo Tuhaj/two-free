@@ -534,82 +534,98 @@
         
         /* Phone-specific adjustments */
         @media (max-width: 480px) {
-            #tablet-layout {
-                display: flex !important;
-                justify-content: space-between;
-                padding: 0 10px;
+            #game-container {
+                padding: 0 !important;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
             }
-            
-            /* Hide other layouts */
-            #standard-layout, #lefty-layout {
-                display: none !important;
+
+            canvas {
+                max-height: 75vh !important;
+                width: 100%;
+                margin: 0 auto;
             }
-            
+
+            #ui {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                font-size: 14px;
+                padding: 8px;
+                margin: 0;
+                z-index: 1000;
+            }
+
+            #touch-controls {
+                position: fixed;
+                bottom: 20px;
+                left: 0;
+                right: 0;
+                padding: 10px 5px;
+                background: transparent;
+            }
+
             .control-btn {
                 width: 65px;
                 height: 65px;
                 margin: 5px;
             }
-            
-            .btn-icon {
-                font-size: 28px;
-            }
-            
-            /* Remove the label spacing since we're not showing labels */
-            .btn-label {
-                display: none;
-            }
-            
-            /* Make all buttons the same size */
-            .control-btn.large {
-                width: 65px;
-                height: 65px;
-            }
-            
-            /* Clean up control bar */
-            #touch-controls {
-                padding: 10px 5px;
-            }
-            
-            /* Make canvas use more vertical space but leave room for controls */
-            canvas {
-                max-height: 60vh !important;
-            }
-            
-            /* Clean up UI display */
-            #ui {
-                top: 45px;
-                left: 10px;
-                font-size: 14px;
-                padding: 8px;
-            }
-            
-            /* Keep pause button visible */
+
+            /* Adjust top buttons position */
             #pauseBtn, #soundBtn {
                 width: 42px;
                 height: 42px;
                 font-size: 20px;
                 top: 10px;
             }
-            
+
             #pauseBtn {
                 right: 10px;
             }
-            
+
             #soundBtn {
                 right: 60px;
             }
-            
-            /* Add space at the bottom for the control bar */
+
+            /* Remove any extra padding/margin */
             body {
-                padding-bottom: 100px;
+                padding: 0;
+                margin: 0;
+                height: 100vh;
+                overflow: hidden;
             }
-            
-            #game-container {
-                padding-bottom: 100px !important;
+
+            /* Ensure proper spacing for iPhone notch/home indicator */
+            @supports (padding: max(0px)) {
+                body {
+                    padding-top: max(0px, env(safe-area-inset-top));
+                    padding-bottom: max(20px, env(safe-area-inset-bottom));
+                }
+                
+                #touch-controls {
+                    bottom: max(20px, env(safe-area-inset-bottom));
+                }
             }
-            
-            /* Additional mobile adjustments are already handled in the main selector at the top */
+        }
+
+        /* iPhone SE and smaller phones */
+        @media (max-width: 380px) and (max-height: 670px) {
+            canvas {
+                max-height: 65vh !important;
+            }
+
+            .control-btn {
+                width: 55px;
+                height: 55px;
+                margin: 3px;
+            }
+
+            #touch-controls {
+                bottom: 10px;
+            }
         }
         
         /* Medium-small phones (430px and below) */
@@ -1017,19 +1033,35 @@
             transform: translate(-50%, -50%);
         }
         
+        /* Special style for the shoot button SVG */
+        .shoot-btn .btn-icon svg {
+            fill: currentColor;
+            stroke: none;
+        }
+
         @media (max-width: 480px) {
             .btn-icon svg {
                 width: 28px;
                 height: 28px;
                 stroke-width: 3;
             }
-        }
-        
-        @media (max-width: 320px) {
-            .btn-icon svg {
-                width: 24px;
-                height: 24px;
-                stroke-width: 3.5;
+
+            #touch-controls {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .control-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .control-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
         }
     </style>
@@ -1168,7 +1200,11 @@
                             </span>
                         </div>
                         <div id="shootBtn" class="control-btn shoot-btn" role="button" aria-label="Shoot">
-                            <span class="btn-icon">⚡</span>
+                            <span class="btn-icon">
+                                <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M16 3L19 14L30 16L19 18L16 29L13 18L2 16L13 14L16 3Z"/>
+                                </svg>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -1193,7 +1229,11 @@
                     </div>
                     <div class="control-group center">
                         <div id="shootBtn-alt" class="control-btn shoot-btn" role="button" aria-label="Shoot">
-                            <span class="btn-icon">⚡</span>
+                            <span class="btn-icon">
+                                <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M16 3L19 14L30 16L19 18L16 29L13 18L2 16L13 14L16 3Z"/>
+                                </svg>
+                            </span>
                         </div>
                     </div>
                     <div class="tablet-controls-right">
