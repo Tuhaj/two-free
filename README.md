@@ -1,49 +1,17 @@
 # Two Free
 
-A Mario-like treasure digging game where you collect treasures to gain energy, which helps you move more quickly.
+[Play the game](https://twofree.tuhaj.pl/)
 
-The game is set in a war-torn environment where you need to dig for treasures while avoiding incoming missile attacks. You can hide underground to be safe from missiles!
-
-## SEO & Social Media
-
-Add the following meta tags to your HTML `<head>` section for better SEO and social media sharing:
-
-```html
-<!-- Primary Meta Tags -->
-<title>Two Free - Treasure Digging Adventure Game</title>
-<meta name="title" content="Two Free - Treasure Digging Adventure Game">
-<meta name="description" content="A Mario-like treasure digging game where you collect treasures and avoid missiles in a war-torn environment. Dig underground to stay safe!">
-<meta name="keywords" content="game, treasure hunting, arcade game, browser game, HTML5 game, indie game, missile dodge, digging game">
-
-<!-- Open Graph / Facebook -->
-<meta property="og:type" content="website">
-<meta property="og:title" content="Two Free - Treasure Digging Adventure Game">
-<meta property="og:description" content="Dig for treasures, avoid missiles, and collect energy in this exciting browser-based adventure game!">
-<meta property="og:image" content="two-free.png">
-
-<!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image">
-<meta property="twitter:title" content="Two Free - Treasure Digging Adventure Game">
-<meta property="twitter:description" content="Dig for treasures, avoid missiles, and collect energy in this exciting browser-based adventure game!">
-<meta property="twitter:image" content="two-free.png">
-
-<!-- Mobile Specific -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="canonical" href="https://your-game-url.com">
-
-<!-- Mobile og:image -->
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<link rel="alternate" media="only screen and (max-width: 640px)" href="two-free-mobile.png">
-```
+In a world torn apart by war, you are one of the two remaining free robots. Your mission is to collect precious energy diamonds deep underground while avoiding deadly missile strikes from above.
 
 ## Game Features
 
-- Dig for treasures to gain energy and progress
-- Avoid missiles by hiding underground 
+- Collect energy diamonds to power your movement
+- Hide underground to escape missile attacks
 - Progress through increasingly difficult levels
 - Collect achievements as you play
-- Touch controls for mobile play
+- Touch controls for mobile devices
+- Background music (press speaker button twice to enable)
 
 ## Project Structure
 
@@ -94,9 +62,11 @@ npm run preview
 
 ## Controls
 
-- **Arrow Keys / WASD** - Move left/right and jump
-- **Down Arrow / S** - Dig
-- **P / ESC** - Pause game
+- **Arrow Keys** - Move left/right and jump
+- **Down Arrow** - Dig underground
+- **⚡ Fire Button** - Shoots energy blast (consumes energy points)
+- **🔊 Speaker Button** - Press twice to enable background music
+- **⏸️ Pause Button** - Pause the game
 - **Touch Controls** - Available on mobile devices
 
 ## License
@@ -117,4 +87,9 @@ CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA
 OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS 
 ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS 
 SOFTWARE.
-``` 
+```
+
+## Credits
+
+Developed at [WarsawJS Cursor AI Jam](https://jam.warsawjs.com/)  
+Game idea by Leon 2025
